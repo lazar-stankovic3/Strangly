@@ -8,7 +8,7 @@ using OmegleCloneMVC.Hubs;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
+Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 builder.Services.AddDbContext<OmegleCloneMVCContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("OmegleCloneMVCContext")));
@@ -91,6 +91,27 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred seeding the database.");
     }
 }
+
+
+Task.Run(async () =>
+{
+    while (true)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<OmegleCloneMVCContext>();
+            var expiredUsers = db.User.Where(u => u.IsPremium && u.PremiumUntil < DateTime.Now);
+            foreach (var user in expiredUsers)
+            {
+                user.IsPremium = false;
+            }
+            await db.SaveChangesAsync();
+        }
+        await Task.Delay(TimeSpan.FromHours(1));
+    }
+});
+
+
 
 // Pipeline
 

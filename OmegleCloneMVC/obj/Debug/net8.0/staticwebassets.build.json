@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "6lL6wMSvylwMulbgzhYOSEDyonJ8J0rFsrrIBB6GF5w=",
+  "Hash": "xIWLOY8ZH49CxUAmU3t1PR48N2kU0I6nkCroSTo7Chs=",
   "Source": "OmegleCloneMVC",
   "BasePath": "_content/OmegleCloneMVC",
   "Mode": "Default",
@@ -73,8 +73,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "ep22qm2jet",
-      "Integrity": "MsykTdRQ1TdyzA4ioPdsTCTx+ToyFOqlM4wy1BobJTo=",
+      "Fingerprint": "lkxg1jo7u8",
+      "Integrity": "C+XkG06BV6n5XMRW0uYwXp20NwTLqsOEaz3I2obl/wY=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\chat.css"
@@ -94,8 +94,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "5ipweew5fc",
-      "Integrity": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+      "Fingerprint": "lmg5ui8408",
+      "Integrity": "kzaqificqiSSKrhwLeTnb4Majb3mZN/TBLDhKGaMTbI=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\site.css"
@@ -1352,7 +1352,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "3886"
+          "Value": "5470"
         },
         {
           "Name": "Content-Type",
@@ -1360,11 +1360,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"MsykTdRQ1TdyzA4ioPdsTCTx+ToyFOqlM4wy1BobJTo=\""
+          "Value": "\"C+XkG06BV6n5XMRW0uYwXp20NwTLqsOEaz3I2obl/wY=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 15 Jul 2025 14:26:53 GMT"
+          "Value": "Thu, 17 Jul 2025 16:20:42 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1374,12 +1374,12 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-MsykTdRQ1TdyzA4ioPdsTCTx+ToyFOqlM4wy1BobJTo="
+          "Value": "sha256-C+XkG06BV6n5XMRW0uYwXp20NwTLqsOEaz3I2obl/wY="
         }
       ]
     },
     {
-      "Route": "css/chat.ep22qm2jet.css",
+      "Route": "css/chat.lkxg1jo7u8.css",
       "AssetFile": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\wwwroot\\css\\chat.css",
       "Selectors": [],
       "ResponseHeaders": [
@@ -1389,7 +1389,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "3886"
+          "Value": "5470"
         },
         {
           "Name": "Content-Type",
@@ -1397,11 +1397,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"MsykTdRQ1TdyzA4ioPdsTCTx+ToyFOqlM4wy1BobJTo=\""
+          "Value": "\"C+XkG06BV6n5XMRW0uYwXp20NwTLqsOEaz3I2obl/wY=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 15 Jul 2025 14:26:53 GMT"
+          "Value": "Thu, 17 Jul 2025 16:20:42 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1411,7 +1411,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "ep22qm2jet"
+          "Value": "lkxg1jo7u8"
         },
         {
           "Name": "label",
@@ -1419,52 +1419,7 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-MsykTdRQ1TdyzA4ioPdsTCTx+ToyFOqlM4wy1BobJTo="
-        }
-      ]
-    },
-    {
-      "Route": "css/site.5ipweew5fc.css",
-      "AssetFile": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\wwwroot\\css\\site.css",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "0"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Mon, 16 Jun 2025 17:12:25 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "5ipweew5fc"
-        },
-        {
-          "Name": "label",
-          "Value": "css/site.css"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+          "Value": "sha256-C+XkG06BV6n5XMRW0uYwXp20NwTLqsOEaz3I2obl/wY="
         }
       ]
     },
@@ -1479,7 +1434,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "0"
+          "Value": "755"
         },
         {
           "Name": "Content-Type",
@@ -1487,11 +1442,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=\""
+          "Value": "\"kzaqificqiSSKrhwLeTnb4Majb3mZN/TBLDhKGaMTbI=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 16 Jun 2025 17:12:25 GMT"
+          "Value": "Thu, 17 Jul 2025 16:29:17 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1501,7 +1456,52 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+          "Value": "sha256-kzaqificqiSSKrhwLeTnb4Majb3mZN/TBLDhKGaMTbI="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.lmg5ui8408.css",
+      "AssetFile": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\wwwroot\\css\\site.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "755"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kzaqificqiSSKrhwLeTnb4Majb3mZN/TBLDhKGaMTbI=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 17 Jul 2025 16:29:17 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "lmg5ui8408"
+        },
+        {
+          "Name": "label",
+          "Value": "css/site.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kzaqificqiSSKrhwLeTnb4Majb3mZN/TBLDhKGaMTbI="
         }
       ]
     },

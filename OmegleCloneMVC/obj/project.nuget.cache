@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "Mg4l5Wisc1g=",
+  "dgSpecHash": "iPBXuWHE0Bo=",
   "success": true,
   "projectFilePath": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\OmegleCloneMVC.csproj",
   "expectedPackageFiles": [
@@ -160,6 +160,7 @@
     "C:\\Users\\lazar\\.nuget\\packages\\sqlitepclraw.core\\2.1.10\\sqlitepclraw.core.2.1.10.nupkg.sha512",
     "C:\\Users\\lazar\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.10\\sqlitepclraw.lib.e_sqlite3.2.1.10.nupkg.sha512",
     "C:\\Users\\lazar\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.10\\sqlitepclraw.provider.e_sqlite3.2.1.10.nupkg.sha512",
+    "C:\\Users\\lazar\\.nuget\\packages\\stripe.net\\48.3.0\\stripe.net.48.3.0.nupkg.sha512",
     "C:\\Users\\lazar\\.nuget\\packages\\swashbuckle.aspnetcore\\9.0.1\\swashbuckle.aspnetcore.9.0.1.nupkg.sha512",
     "C:\\Users\\lazar\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\9.0.1\\swashbuckle.aspnetcore.swagger.9.0.1.nupkg.sha512",
     "C:\\Users\\lazar\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\9.0.1\\swashbuckle.aspnetcore.swaggergen.9.0.1.nupkg.sha512",

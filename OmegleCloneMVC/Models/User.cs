@@ -15,6 +15,9 @@ namespace OmegleCloneMVC.Models
         public Role Role { get; set; }
         public DateTime CreatedOn { get; set; } = DateTime.Now;
 
-        // Obrisano nepotrebno Tasks polje
+
+        public bool IsPremium { get; set; } = false;
+        public DateTime? PremiumUntil { get; set; }
+
     }
 }

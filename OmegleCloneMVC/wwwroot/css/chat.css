@@ -27,21 +27,36 @@
 }
 
 /* NAVBAR */
-
 .custom-nav {
-    background-color: #111 !important;
-    border-bottom: 1px solid #111 !important;
+    background-color: #000 !important;
+    border-bottom: 1px solid #222;
+    padding: 0.75rem 1rem;
+    font-family: 'Segoe UI', sans-serif;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    z-index: 1000;
 }
 
-    .custom-nav .nav-link,
     .custom-nav .navbar-brand {
         color: #facc15 !important;
+        font-weight: 800;
+        font-size: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: color 0.3s ease;
+    }
+
+    .custom-nav .nav-link {
+        color: #facc15 !important;
         font-weight: 600;
+        transition: color 0.3s ease, transform 0.2s ease;
+        padding: 0.5rem 0.75rem;
     }
 
         .custom-nav .nav-link:hover,
         .custom-nav .navbar-brand:hover {
             color: #eab308 !important;
+            text-decoration: none;
+            transform: scale(1.05);
         }
 
     .custom-nav .navbar-toggler {
@@ -49,16 +64,37 @@
     }
 
     .custom-nav .navbar-toggler-icon {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23facc15' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(250,204,21, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23facc15' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(250,204,21,1)' stroke-linecap='round' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
     }
 
     .custom-nav .navbar-collapse {
-        background-color: #111;
+        background-color: #000;
     }
 
-    .custom-nav .navbar-nav.ms-auto .nav-item {
-        margin-left: 15px;
+    .custom-nav .navbar-nav {
+        align-items: center;
     }
+
+        .custom-nav .navbar-nav .nav-item {
+            margin-left: 15px;
+        }
+
+    /* Dugme za temu */
+    .custom-nav .theme-toggle-btn {
+        background: transparent;
+        border: 1px solid #facc15;
+        color: #facc15;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+        .custom-nav .theme-toggle-btn:hover {
+            background-color: #facc15;
+            color: #000;
+        }
+
 
 /* HOME PAGE HERO SECTION */
 
@@ -125,6 +161,34 @@
         .hero-buttons button:hover {
             background: #eab308;
         }
+
+
+.hero-title {
+    font-size: 4rem;
+    margin-bottom: 0.5rem;
+    font-weight: 800;
+    color: #facc15;
+    letter-spacing: 1px;
+}
+
+.chat-btn {
+    background: linear-gradient(to right, #facc15, #eab308);
+    color: #000;
+    border: none;
+    padding: 14px 28px;
+    font-weight: 700;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 10px rgba(234, 179, 8, 0.3);
+}
+
+    .chat-btn:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 6px 14px rgba(234, 179, 8, 0.5);
+    }
+
 
 .home-footer {
     display: flex;

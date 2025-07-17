@@ -5,15 +5,23 @@
 <div class="home-hero">
     <div class="hero-content">
         <img src="~/images/logo-strangly.png" alt="Strangly Logo" class="hero-logo" />
-        <h1>Strangly</h1>
+        <h1 class="hero-title">Strangly</h1>
         <p class="subtitle">Meet New People, Instantly.</p>
-        <input id="interestInput" type="text" placeholder="Enter your interests..." />
+
+        <input id="interestInput" type="text" placeholder="Unesi svoja interesovanja..." />
+
         <div class="hero-buttons">
-            <button onclick="startTextChat()">Text Chat</button>
-            <button onclick="startVideoChat()">Video Chat</button>
+            <button class="chat-btn" onclick="startTextChat()">💬 Text Chat</button>
+            <button class="chat-btn" onclick="startVideoChat()">📹 Video Chat</button>
         </div>
     </div>
 </div>
+
+
+<canvas id="interactive-background"></canvas>
+
+
+
 
 <footer class="home-footer">
     <div class="footer-links">
@@ -24,6 +32,7 @@
     </div>
     <div class="footer-copy">&copy; 2025 Strangly</div>
 </footer>
+
 
 @section Scripts {
     <script>
@@ -39,5 +48,143 @@
             window.location.href = url;
         }
     </script>
+
+    <script>
+        document.addEventListener('mousemove', function (e) {
+            const effect = document.querySelector('.mouse-effect');
+            if (effect) {
+                const x = e.clientX / window.innerWidth * 100;
+                const y = e.clientY / window.innerHeight * 100;
+                effect.style.setProperty('--x', `${x}%`);
+                effect.style.setProperty('--y', `${y}%`);
+            }
+        });
+    </script>
+
+    <script>
+        const canvas = document.getElementById("interactive-background");
+        const ctx = canvas.getContext("2d");
+
+        let particles = [];
+        const particleCount = 100;
+        const mouse = { x: null, y: null };
+        const interactionRadius = 100;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        document.addEventListener("mousemove", (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        document.addEventListener("mouseleave", () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        document.addEventListener("click", () => {
+            for (let p of particles) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 4 + 2;
+                p.vx = Math.cos(angle) * speed;
+                p.vy = Math.sin(angle) * speed;
+                p.exploding = true;
+            }
+
+            setTimeout(() => {
+                for (let p of particles) {
+                    p.exploding = false;
+                }
+            }, 600);
+        });
+
+        class Particle {
+            constructor() {
+                this.baseX = Math.random() * canvas.width;
+                this.baseY = Math.random() * canvas.height;
+                this.x = this.baseX;
+                this.y = this.baseY;
+                this.size = Math.random() * 4 + 2;
+                this.alpha = Math.random() * 0.3 + 0.2;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.exploding = false;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(250, 204, 21, ${this.alpha})`;
+                ctx.shadowColor = "rgba(250,204,21,0.4)";
+                ctx.shadowBlur = 6;
+                ctx.fill();
+            }
+
+            update() {
+                if (!this.exploding && mouse.x !== null && mouse.y !== null) {
+                    const dx = this.x - mouse.x;
+                    const dy = this.y - mouse.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < interactionRadius) {
+                        const angle = Math.atan2(dy, dx);
+                        const force = (interactionRadius - distance) / interactionRadius;
+                        const repel = force * 2;
+                        this.vx += Math.cos(angle) * repel;
+                        this.vy += Math.sin(angle) * repel;
+                    }
+                }
+
+                if (this.exploding) {
+                    this.vx *= 0.95;
+                    this.vy *= 0.95;
+                } else {
+                    const dx = this.baseX - this.x;
+                    const dy = this.baseY - this.y;
+                    this.vx += dx * 0.002;
+                    this.vy += dy * 0.002;
+                    this.vx *= 0.96;
+                    this.vy *= 0.96;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let p of particles) {
+                p.update();
+                p.draw();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+    </script>
+
+
+
+
+
+
+
+
+
 }
 

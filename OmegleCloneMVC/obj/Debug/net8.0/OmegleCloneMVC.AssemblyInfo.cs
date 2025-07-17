@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OmegleCloneMVC")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+069af081f42ede87e2e1131e7521cec98005d6cd")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ca7cab88798bbb6ed9fd7d17545570ba5889fd5b")]
 [assembly: System.Reflection.AssemblyProductAttribute("OmegleCloneMVC")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OmegleCloneMVC")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

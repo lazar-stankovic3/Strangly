@@ -18,6 +18,7 @@
           "Microsoft.IdentityModel.Tokens": "8.12.1",
           "Microsoft.OpenApi": "1.6.24",
           "Microsoft.VisualStudio.Web.CodeGeneration.Design": "9.0.0",
+          "Stripe.net": "48.3.0",
           "Swashbuckle.AspNetCore": "9.0.1",
           "System.IdentityModel.Tokens.Jwt": "8.12.1"
         },
@@ -2275,6 +2276,18 @@
           }
         }
       },
+      "Stripe.net/48.3.0": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "System.Configuration.ConfigurationManager": "8.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/Stripe.net.dll": {
+            "assemblyVersion": "48.3.0.0",
+            "fileVersion": "48.3.0.0"
+          }
+        }
+      },
       "Swashbuckle.AspNetCore/9.0.1": {
         "dependencies": {
           "Microsoft.Extensions.ApiDescription.Server": "8.0.0",
@@ -3660,6 +3673,13 @@
       "sha512": "sha512-uZVTi02C1SxqzgT0HqTWatIbWGb40iIkfc3FpFCpE/r7g6K0PqzDUeefL6P6HPhDtc6BacN3yQysfzP7ks+wSQ==",
       "path": "sqlitepclraw.provider.e_sqlite3/2.1.10",
       "hashPath": "sqlitepclraw.provider.e_sqlite3.2.1.10.nupkg.sha512"
+    },
+    "Stripe.net/48.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-uzxzn3Wg9bXEXCoktmgrrsRyNquhzyNoJvK7AlxYoxccKbljLmzfSajrj8r1LRIKBjXZ6HhB+I+siisIjR3ifg==",
+      "path": "stripe.net/48.3.0",
+      "hashPath": "stripe.net.48.3.0.nupkg.sha512"
     },
     "Swashbuckle.AspNetCore/9.0.1": {
       "type": "package",
