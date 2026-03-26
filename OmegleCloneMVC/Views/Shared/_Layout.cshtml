@@ -1,66 +1,82 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - OmegleCloneMVC</title>
-    <link rel="stylesheet" href="~/css/chat.css" />
 
+    <!-- 1) Bootstrap prvo, pa tvoj CSS da ti pobedi -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- 2) Tvoj CSS (redom: site -> chat -> textchat) -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chat.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/textchat.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/about.css" asp-append-version="true" />
+
     <link rel="stylesheet" href="~/OmegleCloneMVC.styles.css" asp-append-version="true" />
-
     @RenderSection("Styles", required: false)
-
 </head>
-<body>
+<body class="@ViewData["BodyClass"]">
 
     <header>
-        <nav class="navbar custom-nav navbar-expand-lg">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-            Strangly
-        </a>
+        <nav class="navbar navbar-expand-lg custom-nav">
+            <div class="container-fluid d-flex justify-content-between align-items-center">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    Strangly
+                </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
-                aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
+                        aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-        <div class="collapse navbar-collapse justify-content-between" id="navbarMain">
-            <ul class="navbar-nav d-flex align-items-center gap-3">
-                <li class="nav-item">
-                    <button id="themeToggle" class="theme-toggle-btn">🌙</button>
-                </li>
-                <li class="nav-item" id="adminPanelNav">
-                    <a class="nav-link" asp-controller="AdminPanel" asp-action="Index">Admin Panel</a>
-                </li>
-                <li class="nav-item">
-                    <a href="/Subscription/Buy" class="premium-btn">✨ Premium</a>
-                </li>
-            </ul>
+                <div class="collapse navbar-collapse justify-content-between" id="navbarMain">
+                    <ul class="navbar-nav d-flex align-items-center gap-3">
+                        <li class="nav-item">
+                            <button id="themeToggle" class="theme-toggle-btn" type="button">🌙</button>
+                        </li>
 
-            <ul class="navbar-nav ms-auto d-flex align-items-center gap-3">
-                <li class="nav-item" id="loginNav">
-                    <a class="nav-link" asp-controller="Home" asp-action="Login">Login</a>
-                </li>
-                <li class="nav-item" id="registerNav">
-                    <a class="nav-link" asp-controller="Home" asp-action="Register">Register</a>
-                </li>
-                <li class="nav-item" id="logoutNav" style="display:none;">
-                    <a class="nav-link" href="#" onclick="logout()">Logout</a>
-                </li>
-                <li class="nav-item">
-                    <span class="nav-link" id="navUser"></span>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="AdminPanel" asp-action="Index">Admin Panel</a>
+                            </li>
+                        }
 
+                        <li class="nav-item">
+                            <a href="/Subscription/Buy" class="premium-btn">✨ Premium</a>
+                        </li>
+                    </ul>
 
+                    <ul class="navbar-nav ms-auto d-flex align-items-center gap-3">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link">Zdravo, @User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Auth" asp-action="Logout">Logout</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Register">Register</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
     </header>
 
+    <!-- main wrapper -->
     <main class="full-screen-body">
         @RenderBody()
     </main>
@@ -69,101 +85,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
-
-
-
-
-    <script>
-        function parseJwt(token) {
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                return JSON.parse(jsonPayload);
-            } catch (e) {
-                return null;
-            }
-        }
-
-        window.onload = function () {
-            const token = localStorage.getItem("jwt");
-            if (token) {
-                const payload = parseJwt(token);
-
-                document.getElementById("loginNav").style.display = "none";
-                document.getElementById("registerNav").style.display = "none";
-                document.getElementById("logoutNav").style.display = "block";
-
-                if (payload && (payload.Role === "Admin" || payload.Role === "admin")) {
-                    document.getElementById("adminPanelNav").style.display = "block";
-                } else {
-                    document.getElementById("adminPanelNav").style.display = "none";
-                }
-            } else {
-                document.getElementById("loginNav").style.display = "block";
-                document.getElementById("registerNav").style.display = "block";
-                document.getElementById("logoutNav").style.display = "none";
-                document.getElementById("adminPanelNav").style.display = "none";
-            }
-        };
-
-        function logout() {
-            const token = localStorage.getItem("jwt");
-            if (token) {
-                const payload = parseJwt(token);
-                const userId = payload?.UserId;
-
-                if (userId) {
-                    fetch("/api/Users/Logout", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": "Bearer " + token
-                        },
-                        body: JSON.stringify(userId)
-                    }).then(() => {
-                        localStorage.removeItem("jwt");
-                        window.location.href = "/";
-                    });
-                } else {
-                    localStorage.removeItem("jwt");
-                    window.location.href = "/";
-                }
-            } else {
-                window.location.href = "/";
-            }
-        }
-
-    </script>
-
-    <script>
-        function parseJwt (token) {
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                return JSON.parse(jsonPayload);
-            } catch (e) {
-                return null;
-            }
-        }
-        const token = localStorage.getItem("jwt");
-        if (token) {
-            const decoded = parseJwt(token);
-            if (decoded && decoded.User) {
-                document.addEventListener("DOMContentLoaded", function() {
-                    const nav = document.querySelector("#navUser");
-                    if (nav) {
-                        nav.textContent = `Zdravo, ${decoded.User}`;
-                    }
-                });
-            }
-        }
-    </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {

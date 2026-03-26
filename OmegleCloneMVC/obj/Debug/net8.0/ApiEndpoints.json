@@ -1,6 +1,205 @@
 [
   {
-    "ContainingType": "MvcMovie.Controllers.UsersController",
+    "ContainingType": "OmegleCloneMVC.Controllers.HomeController",
+    "Method": "About",
+    "RelativePath": "about",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AdminPanelController",
+    "Method": "Index",
+    "RelativePath": "AdminPanel",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "q",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "roleId",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "premium",
+        "Type": "System.Nullable\u00601[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "active",
+        "Type": "System.Nullable\u00601[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AdminPanelController",
+    "Method": "DeleteUser",
+    "RelativePath": "AdminPanel/DeleteUser",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AdminPanelController",
+    "Method": "GrantPremium",
+    "RelativePath": "AdminPanel/GrantPremium",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "days",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AdminPanelController",
+    "Method": "Logs",
+    "RelativePath": "AdminPanel/Logs",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AdminPanelController",
+    "Method": "ResetPassword",
+    "RelativePath": "AdminPanel/ResetPassword",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "newPassword",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AdminPanelController",
+    "Method": "RevokePremium",
+    "RelativePath": "AdminPanel/RevokePremium",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AdminPanelController",
+    "Method": "SetRole",
+    "RelativePath": "AdminPanel/SetRole",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "roleId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AdminPanelController",
+    "Method": "ToggleActive",
+    "RelativePath": "AdminPanel/ToggleActive",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AdminPanelController",
+    "Method": "UserDetails",
+    "RelativePath": "AdminPanel/UserDetails/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.UsersController",
     "Method": "GetUser",
     "RelativePath": "api/Users/GetUser",
     "HttpMethod": "GET",
@@ -16,7 +215,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "MvcMovie.Controllers.UsersController",
+    "ContainingType": "OmegleCloneMVC.Controllers.UsersController",
     "Method": "Login",
     "RelativePath": "api/Users/Login",
     "HttpMethod": "POST",
@@ -32,23 +231,17 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "MvcMovie.Controllers.UsersController",
+    "ContainingType": "OmegleCloneMVC.Controllers.UsersController",
     "Method": "Logout",
     "RelativePath": "api/Users/Logout",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
-    "Parameters": [
-      {
-        "Name": "userId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
+    "Parameters": [],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "MvcMovie.Controllers.UsersController",
+    "ContainingType": "OmegleCloneMVC.Controllers.UsersController",
     "Method": "Registration",
     "RelativePath": "api/Users/Registration",
     "HttpMethod": "POST",
@@ -61,6 +254,142 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AuthController",
+    "Method": "ExternalLoginCallback",
+    "RelativePath": "auth/externallogincallback",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "returnUrl",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AuthController",
+    "Method": "FacebookLogin",
+    "RelativePath": "auth/facebook-login",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "returnUrl",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AuthController",
+    "Method": "GoogleLogin",
+    "RelativePath": "auth/google-login",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "returnUrl",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.AuthController",
+    "Method": "Logout",
+    "RelativePath": "auth/logout",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.LoadTestController",
+    "Method": "Blast",
+    "RelativePath": "loadtest/blast",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "seconds",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "rate",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.LoadTestController",
+    "Method": "NextStorm",
+    "RelativePath": "loadtest/nextstorm",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "seconds",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "rate",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.LoadTestController",
+    "Method": "Start",
+    "RelativePath": "loadtest/start/{count}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "count",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.LoadTestController",
+    "Method": "Stop",
+    "RelativePath": "loadtest/stop",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OmegleCloneMVC.Controllers.SubscriptionController",
+    "Method": "StripeWebhook",
+    "RelativePath": "stripe/webhook",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   }
 ]

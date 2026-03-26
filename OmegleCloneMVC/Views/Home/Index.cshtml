@@ -1,7 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Welcome";
+    ViewData["BodyClass"] = "home-page";
 }
-
 <div class="home-hero">
     <div class="hero-content">
         <img src="~/images/logo-strangly.png" alt="Strangly Logo" class="hero-logo" />
@@ -11,8 +11,8 @@
         <input id="interestInput" type="text" placeholder="Unesi svoja interesovanja..." />
 
         <div class="hero-buttons">
-            <button class="chat-btn" onclick="startTextChat()">💬 Text Chat</button>
-            <button class="chat-btn" onclick="startVideoChat()">📹 Video Chat</button>
+            <button class="chat-btn" onclick="startTextChat()">Text Chat</button>
+            <button class="chat-btn" onclick="startVideoChat()">Video Chat</button>
         </div>
     </div>
 </div>
@@ -27,27 +27,67 @@
     <div class="footer-links">
         <a href="/about">About</a>
         <a href="/rules">Rules</a>
-        <a href="/privacy">Privacy</a>
+        <a href="/Home/Privacy">Privacy</a>
         <a href="/support">Support</a>
     </div>
-    <div class="footer-copy">&copy; 2025 Strangly</div>
+    <div class="footer-copy">© 2025 Strangly</div>
 </footer>
+
+<div id="agreementModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Confirmation Required</h2>
+        <p>
+            Please confirm that you have read and agree to our
+            <a href="/rules" target="_blank">Rules</a> and
+            <a href="/Home/Privacy" target="_blank">Privacy Policy</a>.
+        </p>
+        <label class="checkbox-label">
+            <input type="checkbox" id="agreementCheckbox" />
+            I have read and agree to the terms.
+        </label>
+        <div class="modal-buttons">
+            <button onclick="proceedToChat()">Continue</button>
+            <button onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
 
 
 @section Scripts {
     <script>
+        let redirectUrl = "";
+
         function startTextChat() {
             const interest = document.getElementById("interestInput").value;
-            const url = `/Chat/Text${interest ? `?interest=${encodeURIComponent(interest)}` : ''}`;
-            window.location.href = url;
+            redirectUrl = `/Chat/Text${interest ? `?interest=${encodeURIComponent(interest)}` : ''}`;
+            openModal();
         }
 
         function startVideoChat() {
             const interest = document.getElementById("interestInput").value;
-            const url = `/Chat/Video${interest ? `?interest=${encodeURIComponent(interest)}` : ''}`;
-            window.location.href = url;
+            redirectUrl = `/Chat/Video${interest ? `?interest=${encodeURIComponent(interest)}` : ''}`;
+            openModal();
+        }
+
+        function openModal() {
+            document.getElementById("agreementCheckbox").checked = false;
+            document.getElementById("agreementModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("agreementModal").style.display = "none";
+        }
+
+        function proceedToChat() {
+            const checkbox = document.getElementById("agreementCheckbox");
+            if (!checkbox.checked) {
+                alert("You must agree to the terms before continuing.");
+                return;
+            }
+            window.location.href = redirectUrl;
         }
     </script>
+
 
     <script>
         document.addEventListener('mousemove', function (e) {
@@ -62,123 +102,410 @@
     </script>
 
     <script>
-        const canvas = document.getElementById("interactive-background");
-        const ctx = canvas.getContext("2d");
+        (() => {
+          const canvas = document.getElementById("interactive-background");
+          if (!canvas) return;
 
-        let particles = [];
-        const particleCount = 100;
-        const mouse = { x: null, y: null };
-        const interactionRadius = 100;
+          const ctx = canvas.getContext("2d", { alpha: true });
+          let w = 0, h = 0, dpr = 1;
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
+          const cfg = {
+            baseCount: 115,
+            maxCount: 190,
+            minCount: 70,
 
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
+            linkDist: 140,
+            linkDist2: 140 * 140,
 
-        document.addEventListener("mousemove", (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
+            mouseDist: 190,
+            mouseDist2: 190 * 190,
 
-        document.addEventListener("mouseleave", () => {
-            mouse.x = null;
-            mouse.y = null;
-        });
+            drift: 0.15,
+            returnForce: 0.0043,
+            friction: 0.935,
+            repelStrength: 2.7,
+            attractStrength: 0.16,
 
-        document.addEventListener("click", () => {
-            for (let p of particles) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 4 + 2;
-                p.vx = Math.cos(angle) * speed;
-                p.vy = Math.sin(angle) * speed;
-                p.exploding = true;
-            }
+            maxSpeed: 2.7,
+            bounce: 0.55,
+            edgePadding: 2,
 
-            setTimeout(() => {
-                for (let p of particles) {
-                    p.exploding = false;
-                }
-            }, 600);
-        });
+            // visuals
+            dotAlphaMin: 0.16,
+            dotAlphaMax: 0.46,
+            glow: 12,
+            glowAlpha: 0.20,
 
-        class Particle {
+            // new visuals
+            haloRadius: 220,
+            haloAlpha: 0.10,
+            parallax: 0.05,     // subtle depth push
+            twinkleSpeed: 0.015
+          };
+
+          const mouseTarget = { x: -9999, y: -9999, down: false };
+          const mouse = { x: -9999, y: -9999 };
+          const particles = [];
+          let rafId = 0;
+
+          const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+          function resize() {
+            const rect = canvas.getBoundingClientRect();
+            w = Math.max(1, Math.floor(rect.width));
+            h = Math.max(1, Math.floor(rect.height));
+
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.floor(w * dpr);
+            canvas.height = Math.floor(h * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const target = clamp(
+              Math.round((w * h) / (1920 * 1080) * cfg.baseCount),
+              cfg.minCount,
+              cfg.maxCount
+            );
+
+            adjustParticleCount(target);
+            rebuildGrid();
+          }
+
+          let resizeT;
+          window.addEventListener("resize", () => {
+            clearTimeout(resizeT);
+            resizeT = setTimeout(resize, 120);
+          });
+
+          window.addEventListener("mousemove", (e) => {
+            const r = canvas.getBoundingClientRect();
+            mouseTarget.x = e.clientX - r.left;
+            mouseTarget.y = e.clientY - r.top;
+          });
+
+          window.addEventListener("mouseleave", () => {
+            mouseTarget.x = -9999;
+            mouseTarget.y = -9999;
+            mouseTarget.down = false;
+          });
+
+          window.addEventListener("mousedown", () => (mouseTarget.down = true));
+          window.addEventListener("mouseup", () => (mouseTarget.down = false));
+
+          class P {
             constructor() {
-                this.baseX = Math.random() * canvas.width;
-                this.baseY = Math.random() * canvas.height;
-                this.x = this.baseX;
-                this.y = this.baseY;
-                this.size = Math.random() * 4 + 2;
-                this.alpha = Math.random() * 0.3 + 0.2;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.exploding = false;
+              this.baseX = Math.random() * w;
+              this.baseY = Math.random() * h;
+
+              // depth layer (0..1)
+              this.z = Math.random();
+              const depth = 0.65 + this.z * 0.55; // closer -> faster
+
+              this.x = this.baseX;
+              this.y = this.baseY;
+
+              const a = Math.random() * Math.PI * 2;
+              const s = (Math.random() * 0.6 + 0.2) * cfg.drift * depth;
+              this.vx = Math.cos(a) * s;
+              this.vy = Math.sin(a) * s;
+
+              this.r = (Math.random() * 2.1 + 1.1) * (0.75 + this.z * 0.7);
+              this.alpha = cfg.dotAlphaMin + Math.random() * (cfg.dotAlphaMax - cfg.dotAlphaMin);
+
+              this.tw = Math.random() * 0.7 + 0.15;
+              this.phase = Math.random() * Math.PI * 2;
+              this.aNow = this.alpha;
             }
 
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(250, 204, 21, ${this.alpha})`;
-                ctx.shadowColor = "rgba(250,204,21,0.4)";
-                ctx.shadowBlur = 6;
-                ctx.fill();
+            step(t) {
+              // parallax: base target shifts slightly with mouse (depth effect)
+              const px = (mouse.x - w * 0.5) * cfg.parallax * (this.z - 0.5);
+              const py = (mouse.y - h * 0.5) * cfg.parallax * (this.z - 0.5);
+
+              const targetX = this.baseX + px;
+              const targetY = this.baseY + py;
+
+              // return
+              const dx0 = targetX - this.x;
+              const dy0 = targetY - this.y;
+              this.vx += dx0 * cfg.returnForce;
+              this.vy += dy0 * cfg.returnForce;
+
+              // mouse interaction
+              const dx = this.x - mouse.x;
+              const dy = this.y - mouse.y;
+              const d2 = dx * dx + dy * dy;
+
+              if (d2 < cfg.mouseDist2) {
+                const d = Math.max(20, Math.sqrt(d2));
+                const force = (cfg.mouseDist - d) / cfg.mouseDist;
+
+                const repel = cfg.repelStrength * force * (0.7 + this.z * 0.6);
+                this.vx += (dx / d) * repel;
+                this.vy += (dy / d) * repel;
+
+                if (mouseTarget.down) {
+                  const att = cfg.attractStrength * force;
+                  this.vx -= (dx / d) * att;
+                  this.vy -= (dy / d) * att;
+                }
+              }
+
+              this.vx *= cfg.friction;
+              this.vy *= cfg.friction;
+
+              // speed limit
+              const sp = Math.hypot(this.vx, this.vy);
+              if (sp > cfg.maxSpeed) {
+                const k = cfg.maxSpeed / sp;
+                this.vx *= k;
+                this.vy *= k;
+              }
+
+              this.x += this.vx;
+              this.y += this.vy;
+
+              // soft bounce edges
+              const pad = cfg.edgePadding;
+              if (this.x < pad) { this.x = pad; this.vx *= -cfg.bounce; }
+              if (this.x > w - pad) { this.x = w - pad; this.vx *= -cfg.bounce; }
+              if (this.y < pad) { this.y = pad; this.vy *= -cfg.bounce; }
+              if (this.y > h - pad) { this.y = h - pad; this.vy *= -cfg.bounce; }
+
+              // twinkle
+              this.phase += cfg.twinkleSpeed;
+              this.aNow = this.alpha * (0.72 + 0.28 * Math.sin(this.phase + t * 0.001) * this.tw);
             }
+          }
 
-            update() {
-                if (!this.exploding && mouse.x !== null && mouse.y !== null) {
-                    const dx = this.x - mouse.x;
-                    const dy = this.y - mouse.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+          // ---- Grid
+          let gridSize = cfg.linkDist;
+          let gridCols = 0, gridRows = 0;
+          let grid = [];
 
-                    if (distance < interactionRadius) {
-                        const angle = Math.atan2(dy, dx);
-                        const force = (interactionRadius - distance) / interactionRadius;
-                        const repel = force * 2;
-                        this.vx += Math.cos(angle) * repel;
-                        this.vy += Math.sin(angle) * repel;
+          function rebuildGrid() {
+            gridSize = cfg.linkDist;
+            gridCols = Math.ceil(w / gridSize);
+            gridRows = Math.ceil(h / gridSize);
+            grid = new Array(gridCols * gridRows);
+            for (let i = 0; i < grid.length; i++) grid[i] = [];
+          }
+
+          function gridIndex(x, y) {
+            const cx = clamp(Math.floor(x / gridSize), 0, gridCols - 1);
+            const cy = clamp(Math.floor(y / gridSize), 0, gridRows - 1);
+            return cy * gridCols + cx;
+          }
+
+          function fillGrid() {
+            for (let i = 0; i < grid.length; i++) grid[i].length = 0;
+            for (const p of particles) grid[gridIndex(p.x, p.y)].push(p);
+          }
+
+          function adjustParticleCount(target) {
+            while (particles.length < target) particles.push(new P());
+            while (particles.length > target) particles.pop();
+          }
+
+          // ---- Visuals
+          function drawVignetteGlow() {
+            const g = ctx.createRadialGradient(w * 0.18, h * 0.12, 0, w * 0.18, h * 0.12, Math.max(w, h) * 0.9);
+            g.addColorStop(0, "rgba(250,204,21,0.09)");
+            g.addColorStop(0.55, "rgba(250,204,21,0.022)");
+            g.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, w, h);
+          }
+
+          function drawMouseHalo() {
+            if (mouse.x < -1000) return;
+            const g = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, cfg.haloRadius);
+            g.addColorStop(0, `rgba(250,204,21,${cfg.haloAlpha})`);
+            g.addColorStop(0.55, `rgba(250,204,21,${cfg.haloAlpha * 0.35})`);
+            g.addColorStop(1, "rgba(250,204,21,0)");
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, w, h);
+          }
+
+          // Gradient line between two points (looks much nicer than flat color)
+          function strokeGradientLine(x1, y1, x2, y2, a) {
+            const g = ctx.createLinearGradient(x1, y1, x2, y2);
+            g.addColorStop(0, `rgba(255,255,255,${a * 0.22})`);
+            g.addColorStop(0.5, `rgba(250,204,21,${a})`);
+            g.addColorStop(1, `rgba(255,255,255,${a * 0.10})`);
+            ctx.strokeStyle = g;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+
+          function drawLinks() {
+            ctx.lineWidth = 1;
+
+            for (let cy = 0; cy < gridRows; cy++) {
+              for (let cx = 0; cx < gridCols; cx++) {
+                const cell = grid[cy * gridCols + cx];
+                if (!cell.length) continue;
+
+                for (const p of cell) {
+                  for (let ny = cy - 1; ny <= cy + 1; ny++) {
+                    if (ny < 0 || ny >= gridRows) continue;
+                    for (let nx = cx - 1; nx <= cx + 1; nx++) {
+                      if (nx < 0 || nx >= gridCols) continue;
+
+                      const ncell = grid[ny * gridCols + nx];
+                      for (const q of ncell) {
+                        if (q === p) continue;
+
+                        const dx = p.x - q.x;
+                        const dy = p.y - q.y;
+                        const d2 = dx * dx + dy * dy;
+
+                        if (d2 < cfg.linkDist2) {
+                          const t = 1 - d2 / cfg.linkDist2;
+
+                          // boost near mouse
+                          const mx = (p.x + q.x) * 0.5 - mouse.x;
+                          const my = (p.y + q.y) * 0.5 - mouse.y;
+                          const md2 = mx * mx + my * my;
+                          const mBoost = md2 < cfg.mouseDist2 ? 0.30 : 0;
+
+                          const a = (0.06 + 0.24 * t + mBoost) * (0.75 + 0.25 * (p.z + q.z) * 0.5);
+                          strokeGradientLine(p.x, p.y, q.x, q.y, a);
+                        }
+                      }
                     }
+                  }
                 }
-
-                if (this.exploding) {
-                    this.vx *= 0.95;
-                    this.vy *= 0.95;
-                } else {
-                    const dx = this.baseX - this.x;
-                    const dy = this.baseY - this.y;
-                    this.vx += dx * 0.002;
-                    this.vy += dy * 0.002;
-                    this.vx *= 0.96;
-                    this.vy *= 0.96;
-                }
-
-                this.x += this.vx;
-                this.y += this.vy;
+              }
             }
-        }
+          }
 
-        function initParticles() {
-            particles = [];
-            for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle());
+          function drawDots() {
+            ctx.shadowColor = `rgba(250,204,21,${cfg.glowAlpha})`;
+            ctx.shadowBlur = cfg.glow;
+
+            for (const p of particles) {
+              // tiny white-ish highlight for depth
+              const hi = 0.12 + p.z * 0.08;
+              ctx.fillStyle = `rgba(250,204,21,${p.aNow})`;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = `rgba(255,255,255,${hi})`;
+              ctx.beginPath();
+              ctx.arc(p.x - p.r * 0.25, p.y - p.r * 0.25, p.r * 0.45, 0, Math.PI * 2);
+              ctx.fill();
             }
-        }
 
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let p of particles) {
-                p.update();
-                p.draw();
-            }
-            requestAnimationFrame(animateParticles);
-        }
+            ctx.shadowBlur = 0;
+          }
 
-        initParticles();
-        animateParticles();
+          // ---- Loop
+          let last = performance.now();
+          function frame(now) {
+            const dt = Math.min(40, now - last);
+            last = now;
+
+            // smooth mouse
+            const lerp = 1 - Math.pow(0.001, dt / 16.67);
+            mouse.x += (mouseTarget.x - mouse.x) * lerp;
+            mouse.y += (mouseTarget.y - mouse.y) * lerp;
+
+            ctx.clearRect(0, 0, w, h);
+
+            drawVignetteGlow();
+            drawMouseHalo();
+
+            for (const p of particles) p.step(now);
+
+            fillGrid();
+            drawLinks();
+            drawDots();
+
+            rafId = requestAnimationFrame(frame);
+          }
+
+          canvas.style.width = "100vw";
+          canvas.style.height = "100vh";
+
+          resize();
+          cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(frame);
+        })();
     </script>
+    <script>
+        (() => {
+          if (!document.body.classList.contains("home-page")) return;
 
+          const cursor = document.createElement("div");
+          cursor.className = "pro-pointer";
+          document.body.appendChild(cursor);
 
+          let sticky = false;
+          let targetEl = null;
+
+          const isInteractive = (el) =>
+            el && el.closest && el.closest("a, button, [role='button'], .chat-btn, .premium-btn, .footer-links a");
+
+          const pxToNum = (v) => {
+            const n = parseFloat(v || "0");
+            return Number.isFinite(n) ? n : 0;
+          };
+          const getRadius = (el) => pxToNum(getComputedStyle(el).borderTopLeftRadius || "0px");
+
+          window.addEventListener("mousemove", (e) => {
+            if (sticky) return;
+            cursor.style.width = "14px";
+            cursor.style.height = "14px";
+            cursor.style.borderRadius = "0px";
+            cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+          }, { passive: true });
+
+          window.addEventListener("mousedown", () => document.documentElement.classList.add("custom-cursor--down"));
+          window.addEventListener("mouseup", () => document.documentElement.classList.remove("custom-cursor--down"));
+
+          window.addEventListener("mouseover", (e) => {
+            const el = isInteractive(e.target);
+            if (!el) {
+              sticky = false; targetEl = null;
+              document.documentElement.classList.remove("custom-cursor--sticky");
+              return;
+            }
+
+            sticky = true; targetEl = el;
+            document.documentElement.classList.add("custom-cursor--sticky");
+
+            const rect = targetEl.getBoundingClientRect();
+            const pad = 8;
+
+            const w = rect.width + pad * 2;
+            const h = rect.height + pad * 2;
+            const r = Math.max(10, getRadius(targetEl) + pad);
+
+            cursor.style.width = `${w}px`;
+            cursor.style.height = `${h}px`;
+            cursor.style.borderRadius = `${r}px`;
+            cursor.style.transform = `translate3d(${rect.left - pad}px, ${rect.top - pad}px, 0)`;
+          });
+
+          window.addEventListener("mouseout", (e) => {
+            const leaving = e.target && isInteractive(e.target);
+            const goingTo = e.relatedTarget && isInteractive(e.relatedTarget);
+            if (leaving && !goingTo) {
+              sticky = false; targetEl = null;
+              document.documentElement.classList.remove("custom-cursor--sticky");
+            }
+          });
+
+          window.addEventListener("mouseleave", () => {
+            sticky = false; targetEl = null;
+            document.documentElement.classList.remove("custom-cursor--sticky","custom-cursor--down");
+            cursor.style.transform = `translate3d(-9999px,-9999px,0)`;
+          });
+        })();
+    </script>
 
 
 

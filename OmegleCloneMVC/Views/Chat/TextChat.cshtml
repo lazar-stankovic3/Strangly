@@ -9,11 +9,11 @@
 
     <div class="input-row">
         <input type="text" id="interestInput" placeholder="Unesi interesovanja (npr: sport, film)..." />
-        <button onclick="startTextChat()">Start</button>
+        <button id="startBtn" onclick="startTextChat()">Start</button>
     </div>
 
     <div class="input-row">
-        <input type="text" id="textMessageInput" placeholder="Napiši poruku..." />
+        <input type="text" id="textMessageInput" placeholder="Napiši poruku..." oninput="notifyTextTyping()" />
         <button onclick="sendTextMessage()">Send</button>
         <button onclick="nextTextPartner()">Next</button>
     </div>
@@ -24,12 +24,21 @@
     <script>
         let chatConnection;
         let typingTimeout;
+        let started = false;
 
         async function startTextChat() {
-            const interest = document.getElementById("interestInput").value;
+            if (started && chatConnection && chatConnection.state === "Connected") {
+                appendTextChat("ℹ️ Već si povezan. Klikni Next za novog partnera.");
+                return;
+            }
+
+            const interestInput = document.getElementById("interestInput");
+            const startBtn = document.getElementById("startBtn");
+            const interest = interestInput.value.trim();
 
             chatConnection = new signalR.HubConnectionBuilder()
                 .withUrl("/textChatHub?interest=" + encodeURIComponent(interest))
+                .withAutomaticReconnect()
                 .build();
 
             chatConnection.on("ReceiveMessage", msg => {
@@ -46,9 +55,28 @@
 
             chatConnection.on("PartnerDisconnected", () => {
                 appendTextChat("❌ Partner je napustio chat.");
+                appendTextChat("🔎 Tražimo novog partnera...");
+            });
+
+            chatConnection.onreconnected(() => {
+                appendTextChat("✅ Ponovo povezano.");
+            });
+
+            chatConnection.onclose(() => {
+                started = false;
+                startBtn.disabled = false;
+                startBtn.innerText = "Start";
+                interestInput.disabled = false;
+                appendTextChat("⚠️ Konekcija zatvorena. Klikni Start.");
             });
 
             await chatConnection.start();
+
+            started = true;
+            startBtn.disabled = true;
+            startBtn.innerText = "Searching...";
+            interestInput.disabled = true;
+
             appendTextChat("🔎 Tražimo partnera...");
         }
 
@@ -56,6 +84,11 @@
             const msgInput = document.getElementById("textMessageInput");
             const msg = msgInput.value.trim();
             if (!msg) return;
+
+            if (!chatConnection || chatConnection.state !== "Connected") {
+                appendTextChat("⚠️ Nisi povezan. Klikni Start.");
+                return;
+            }
 
             appendTextChat("Ti: " + msg);
             chatConnection.invoke("SendMessage", msg);
@@ -70,10 +103,18 @@
         }
 
         async function nextTextPartner() {
-            if (chatConnection) await chatConnection.stop();
-            document.getElementById("textChatBox").innerHTML = "";
+            if (!chatConnection || chatConnection.state !== "Connected") {
+                appendTextChat("⚠️ Nisi povezan. Klikni Start.");
+                return;
+            }
+
+            document.getElementById("typingStatus").innerText = "";
             document.getElementById("textMessageInput").value = "";
-            document.getElementById("interestInput").disabled = false;
+            appendTextChat("⏭️ Next...");
+            appendTextChat("🔎 Tražimo novog partnera...");
+
+            // KLJUČNO: ne stopiraš konekciju — samo pozoveš hub Next()
+            await chatConnection.invoke("Next");
         }
 
         function appendTextChat(msg) {
@@ -92,7 +133,6 @@
                 sendTextMessage();
             }
         });
-
     </script>
 }
 

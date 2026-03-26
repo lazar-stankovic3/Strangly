@@ -1,0 +1,190 @@
+﻿@model OmegleCloneMVC.Controllers.AdminDashboardVm
+@{
+    ViewData["Title"] = "Admin Panel";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-v2.css" asp-append-version="true" />
+}
+
+<div class="admin-page">
+    <div class="admin-top">
+        <div>
+            <h1 class="admin-title">Admin Panel</h1>
+            <div class="admin-sub">Upravljanje korisnicima • Premium • Role • Audit log</div>
+        </div>
+
+        <a class="admin-link admin-link-primary" href="/AdminPanel/Logs">View Logs</a>
+    </div>
+
+    @if (TempData["Msg"] != null)
+    {
+        <div class="admin-toast">@TempData["Msg"]</div>
+    }
+
+    <div class="admin-cards">
+        <div class="admin-card">
+            <div class="admin-card-label">Total users</div>
+            <div class="admin-card-value">@Model.Stats.TotalUsers</div>
+        </div>
+        <div class="admin-card">
+            <div class="admin-card-label">Active users</div>
+            <div class="admin-card-value">@Model.Stats.ActiveUsers</div>
+        </div>
+        <div class="admin-card">
+            <div class="admin-card-label">Premium valid</div>
+            <div class="admin-card-value">@Model.Stats.PremiumUsers</div>
+        </div>
+    </div>
+
+    <form method="get" class="admin-filters">
+        <input name="q" value="@Model.Q" placeholder="Search username or email..." />
+
+        <select name="roleId">
+            <option value="">All roles</option>
+            @foreach (var r in Model.Roles)
+            {
+                <option value="@r.Id" selected="@(Model.RoleId == r.Id)">@r.Name</option>
+            }
+        </select>
+
+        <select name="active">
+            <option value="">Active: all</option>
+            <option value="true" selected="@(Model.Active == true)">Active</option>
+            <option value="false" selected="@(Model.Active == false)">Inactive</option>
+        </select>
+
+        <select name="premium">
+            <option value="">Premium: all</option>
+            <option value="true" selected="@(Model.Premium == true)">Premium</option>
+            <option value="false" selected="@(Model.Premium == false)">Not premium</option>
+        </select>
+
+        <select name="pageSize">
+            <option value="25" selected="@(Model.PageSize == 25)">25</option>
+            <option value="50" selected="@(Model.PageSize == 50)">50</option>
+            <option value="100" selected="@(Model.PageSize == 100)">100</option>
+        </select>
+
+        <button type="submit">Apply</button>
+    </form>
+
+    <div class="admin-table-wrap">
+        <div class="admin-table-scroll">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width:80px;">ID</th>
+                        <th class="admin-sticky-col-h">User</th>
+                        <th>Email</th>
+                        <th style="width:240px;">Role</th>
+                        <th style="width:140px;">Active</th>
+                        <th style="width:210px;">Premium</th>
+                        <th style="width:420px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model.Users)
+                    {
+                        <tr>
+                            <td>@u.UserId</td>
+
+                            <td class="admin-sticky-col">
+                                <a class="admin-user-link"
+                                   asp-controller="AdminPanel"
+                                   asp-action="UserDetails"
+                                   asp-route-id="@u.UserId">
+                                    @u.Username
+                                </a>
+                            </td>
+
+                            <td class="text-muted">@u.Mail</td>
+
+                            <td>
+                                <form asp-controller="AdminPanel" asp-action="SetRole" method="post" class="admin-roleform">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@u.UserId" />
+
+                                    <select name="roleId" class="admin-select">
+                                        @foreach (var r in Model.Roles)
+                                        {
+                                            <option value="@r.Id" selected="@(u.RoleId == r.Id)">@r.Name</option>
+                                        }
+                                    </select>
+
+                                    <button class="admin-mini-btn" type="submit">Save</button>
+                                </form>
+                            </td>
+
+                            <td>
+                                <span class="admin-badge @(u.IsActive ? "admin-badge--ok" : "admin-badge--off")">
+                                    @(u.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="admin-badge @((u.IsPremium && u.PremiumUntil != null && u.PremiumUntil >= DateTime.UtcNow) ? "admin-badge--premium" : "admin-badge--off")">
+                                        @(u.IsPremium ? "Premium" : "No")
+                                    </span>
+                                    @if (u.PremiumUntil != null)
+                                    {
+                                        <small class="text-muted">Until: @u.PremiumUntil.Value.ToString("yyyy-MM-dd")</small>
+                                    }
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="admin-actions">
+                                    <form asp-controller="AdminPanel" asp-action="ToggleActive" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@u.UserId" />
+                                        <button class="btn btn-sm btn-outline-info">Toggle Active</button>
+                                    </form>
+
+                                    <form asp-controller="AdminPanel" asp-action="GrantPremium" method="post" class="admin-premium">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@u.UserId" />
+                                        <input class="admin-days" type="number" name="days" value="30" min="1" max="365" />
+                                        <button class="btn btn-sm btn-warning text-dark">Grant</button>
+                                    </form>
+
+                                    <form asp-controller="AdminPanel" asp-action="RevokePremium" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@u.UserId" />
+                                        <button class="btn btn-sm btn-outline-warning">Revoke</button>
+                                    </form>
+
+                                    <form asp-controller="AdminPanel" asp-action="DeleteUser" method="post"
+                                          onsubmit="return confirm('Obrisati korisnika @u.Username ?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@u.UserId" />
+                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="admin-pagination">
+            <div class="admin-pageinfo">
+                Page @Model.Page / @Math.Max(Model.TotalPages, 1) • Total: @Model.Total
+            </div>
+
+            <div class="admin-pager">
+                @{
+                    var prev = Math.Max(1, Model.Page - 1);
+                    var next = Math.Min(Math.Max(Model.TotalPages, 1), Model.Page + 1);
+                }
+
+                <a class="admin-pill" href="@Url.Action("Index", new { q = Model.Q, roleId = Model.RoleId, premium = Model.Premium, active = Model.Active, page = 1, pageSize = Model.PageSize })">« First</a>
+                <a class="admin-pill" href="@Url.Action("Index", new { q = Model.Q, roleId = Model.RoleId, premium = Model.Premium, active = Model.Active, page = prev, pageSize = Model.PageSize })">‹ Prev</a>
+                <a class="admin-pill" href="@Url.Action("Index", new { q = Model.Q, roleId = Model.RoleId, premium = Model.Premium, active = Model.Active, page = next, pageSize = Model.PageSize })">Next ›</a>
+                <a class="admin-pill" href="@Url.Action("Index", new { q = Model.Q, roleId = Model.RoleId, premium = Model.Premium, active = Model.Active, page = Math.Max(Model.TotalPages, 1), pageSize = Model.PageSize })">Last »</a>
+            </div>
+        </div>
+    </div>
+</div>

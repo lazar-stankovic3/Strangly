@@ -1,36 +1,88 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-</head>
-<body>
-    <h2>Register</h2>
-    <form id="registerForm">
-        <label>Username:</label><br>
-        <input type="text" id="username" required><br><br>
-        <label>Email:</label><br>
-        <input type="email" id="email" required><br><br>
-        <label>Password:</label><br>
-        <input type="password" id="password" required><br><br>
-        <button type="submit">Register</button>
-    </form>
-    <p id="result"></p>
+﻿@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Register";
+}
+
+<div class="container-center">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2 class="auth-title">Register</h2>
+            <p class="auth-subtitle">Create your account in less than a minute.</p>
+        </div>
+
+        <form id="registerForm" class="auth-form">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <div class="input-wrap">
+                    <span class="input-icon">👤</span>
+                    <input class="auth-input" type="text" id="username" required placeholder="Your username" />
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email</label>
+                <div class="input-wrap">
+                    <span class="input-icon">✉️</span>
+                    <input class="auth-input" type="email" id="email" required placeholder="you@example.com" />
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔒</span>
+                    <input class="auth-input" type="password" id="password" required placeholder="Create a password" />
+                </div>
+            </div>
+
+            <button class="auth-primary-btn" type="submit">Create account</button>
+
+            <p id="result" class="auth-result"></p>
+
+            <div class="auth-footer">
+                Already have an account?
+                <a href="/Home/Login">Login</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
     <script>
-        document.getElementById("registerForm").addEventListener("submit", async function(e) {
-            e.preventDefault();
-            const data = {
-                username: document.getElementById("username").value,
-                mail: document.getElementById("email").value,
-                password: document.getElementById("password").value
-            };
+        document.getElementById("registerForm").addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const resultEl = document.getElementById("result");
+          resultEl.textContent = "";
+          resultEl.style.color = "rgba(255,255,255,.75)";
+
+          const data = {
+            username: document.getElementById("username").value.trim(),
+            mail: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value
+          };
+
+          try {
             const response = await fetch("/api/Users/Registration", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data)
             });
-            const result = await response.text();
-            document.getElementById("result").innerText = result;
+
+            const text = await response.text();
+
+            if (response.ok) {
+              resultEl.style.color = "rgba(34,197,94,.95)";
+              resultEl.textContent = text || "Registration successful. Redirecting...";
+              setTimeout(() => window.location.href = "/Home/Login", 900);
+            } else {
+              resultEl.style.color = "rgba(239,68,68,.95)";
+              resultEl.textContent = text || "Registration failed.";
+            }
+          } catch {
+            resultEl.style.color = "rgba(239,68,68,.95)";
+            resultEl.textContent = "Network error. Try again.";
+          }
         });
     </script>
-</body>
-</html>
+}

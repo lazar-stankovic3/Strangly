@@ -10,9 +10,17 @@ namespace OmegleCloneMVC.Data
         {
         }
 
+        public DbSet<User> User { get; set; } = default!;
+        public DbSet<Role> Role { get; set; } = default!;
+        public DbSet<AdminActionLog> AdminActionLogs { get; set; } = default!; // <-- DODAJ
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Mail)
+                .IsUnique();
 
             var roles = Enum.GetValues(typeof(Roles))
                 .Cast<Roles>()
@@ -28,9 +36,9 @@ namespace OmegleCloneMVC.Data
                 .HasOne(u => u.Role)
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId);
-        }
 
-        public DbSet<User> User { get; set; }
-        public DbSet<Role> Role { get; set; }
+            modelBuilder.Entity<AdminActionLog>()
+                .HasIndex(x => x.CreatedUtc);
+        }
     }
 }

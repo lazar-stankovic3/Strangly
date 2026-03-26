@@ -1,876 +1,640 @@
 ﻿@{
-    ViewData["Title"] = "Omegle Video + Chat";
+    ViewData["Title"] = "Strangly";
 }
 
-<video id="localVideoBackground" autoplay muted playsinline class="background-video"></video>
+<div class="video-chat-root">
+    <div class="vc-container">
 
-<div class="top-bar">
-    <span class="logo" onclick="window.location.href='/'">Strangly</span>
-    <div class="gender-select-wrapper">
-        <select id="genderSelect">
-            <option value="">Izaberi pol</option>
-            <option value="male">Muško</option>
-            <option value="female">Žensko</option>
-        </select>
+        <div class="video-column">
+
+            <div class="vc-topbar">
+                <div class="control-group">
+                    <div class="online-chip" id="onlineUsers">👥 0 online</div>
+
+                    <div class="control-group">
+                        <span class="control-label">Ja sam:</span>
+                        <div class="segmented" id="genderSeg">
+                            <button type="button" class="seg-btn" data-value="male">Muško</button>
+                            <button type="button" class="seg-btn" data-value="female">Žensko</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <span class="control-label">Tražim:</span>
+                        <div class="segmented" id="genderFilterSeg">
+                            <button type="button" class="seg-btn is-active" data-value="any">Bilo koji</button>
+                            <button type="button" class="seg-btn" data-value="male">Muško</button>
+                            <button type="button" class="seg-btn" data-value="female">Žensko</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <button id="devicesBtn" type="button" class="ghost-btn">Uređaji</button>
+                </div>
+
+            </div>
+
+            <div id="deviceDrawer" class="device-drawer">
+                <div class="device-row">
+                    <span class="device-title">Kamera:</span>
+                    <div class="device-list" id="videoDeviceList"></div>
+                </div>
+
+                <div class="device-row">
+                    <span class="device-title">Mikrofon:</span>
+                    <div class="device-list" id="audioDeviceList"></div>
+                </div>
+            </div>
+
+            <div class="video-stage">
+                <div class="badge">Partner</div>
+                <video id="remoteVideo" autoplay playsinline></video>
+
+                <div class="pip">
+                    <div class="badge">Ti</div>
+                    <video id="localVideo" autoplay muted playsinline></video>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-column">
+            <div id="loader" class="loader-container" style="display:none;">
+                <div class="loader-spinner"></div>
+                <div class="loader-text">Tražimo partnera...</div>
+            </div>
+
+            <div id="chatBox"></div>
+            <div id="typingStatus"></div>
+
+            <div class="input-wrapper">
+                <input type="text" id="messageInput" placeholder="Write a message..." oninput="notifyTyping()" />
+
+                <div class="input-actions">
+                    <button id="startBtn" type="button" class="startnext-btn">Start</button>
+                    <button class="send-btn" type="button" onclick="sendMessage()">Send</button>
+                    <button id="muteBtn" type="button" class="mute-btn" onclick="toggleMic()">Mute</button>
+                </div>
+
+                <small class="esc-text">(ESC za sledećeg partnera)</small>
+            </div>
+
+        </div>
+
     </div>
 </div>
-
-<div class="container">
-    <div class="video-column">
-        <video id="remoteVideo" autoplay playsinline></video>
-        <video id="localVideo" autoplay muted playsinline></video>
-    </div>
-
-    <div class="chat-column">
-        <div id="loader" class="loader-container" style="display:none;">
-            <div class="loader-spinner"></div>
-            <div class="loader-text">Tražimo partnera...</div>
-        </div>
-
-        <div id="onlineUsers" class="online-counter">👥 0 online</div>
-
-        <div id="chatBox"></div>
-        <div id="typingStatus"></div>
-
-        <div class="device-select-wrapper">
-            <label for="videoDevicesSelect">Choose Camera:</label>
-            <select id="videoDevicesSelect" class="device-select"></select>
-        </div>
-
-        <div class="input-wrapper">
-            <input type="text" id="messageInput" placeholder="Write a message..." oninput="notifyTyping()" />
-
-            <button onclick="sendMessage()">Send</button>
-            <button onclick="next()">Next</button>
-            <button class="mute-btn" onclick="toggleMic()">Mute</button>
-            <small class="esc-text" style="color:#777; font-size: 12px;">
-                (ESC za sledećeg partnera)
-            </small>
-        </div>
-    </div>
-</div>
-
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
     <script>
-        let localStream, peerConnection, connection;
-        let isMicMuted = false, isCameraOff = false;
-        let typingTimeout;
+        const HUB_BASE = "/chatHub";
+        const PREMIUM_URL = "/Subscription/PremiumStatus";
 
-                // Izdvoji interest iz query stringa
-        const urlParams = new URLSearchParams(window.location.search);
-        const userInterest = urlParams.get("interest") || "";
+        // ===== WebRTC/SignalR state =====
+        let localStream = null;
+        let peerConnection = null;
+        let connection = null;
+        let typingTimeout = null;
+        let iAmInitiator = false;
+        let manualNext = false;
 
+        // one button (Start -> Next)
+        let hasStarted = false;
 
-        const config = {
-          iceServers: [
-            {
-              urls: ["stun:fr-turn2.xirsys.com"]
-            },
-            {
-              urls: [
-                "turn:fr-turn2.xirsys.com:80?transport=udp",
-                "turn:fr-turn2.xirsys.com:3478?transport=udp",
-                "turn:fr-turn2.xirsys.com:80?transport=tcp",
-                "turn:fr-turn2.xirsys.com:3478?transport=tcp",
-                "turns:fr-turn2.xirsys.com:443?transport=tcp",
-                "turns:fr-turn2.xirsys.com:5349?transport=tcp"
-              ],
-              username: "vzxxxb6fx4hwGxibcK4vxY4oPs6xmwMcCD-NT9ZDirVqx_Xm4yKW4KEQzp3hXuLyAAAAAGhr1JFsYWsx",
-              credential: "ae5f7b3e-5b3b-11f0-8169-a27eab470add"
-            }
-          ]
+        // premium UI flag
+        let isPremiumUser = false;
+
+        // ===== UI state (segmented/chips) =====
+        let selectedGender = "";
+        let selectedGenderFilter = "any";
+        let selectedVideoDeviceId = "";
+        let selectedAudioDeviceId = "";
+
+        const rtcConfig = {
+            iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }]
         };
 
-
-
-        async function setupSignalR(userGender) {
-            connection = new signalR.HubConnectionBuilder()
-                .withUrl("/chatHub?gender=" + encodeURIComponent(userGender) + "&interest=" + encodeURIComponent(userInterest))
-                .build();
-
-        connection.on("PartnerFound", () => {
-            appendChat("✅ Partner povezan.");
-
-            // Sakrij loader ako je aktivan
-            const loader = document.getElementById("loader");
-            if (loader) loader.style.display = "none";
-
-            const videoLoader = document.getElementById("videoLoader");
-            if (videoLoader) videoLoader.style.display = "none";
-        });
-
-
-
-
-
-
-            connection.on("PartnerGender", gender => {
-                const emoji = gender === "Muško" ? "👨" : gender === "Žensko" ? "👩" : "❓";
-                appendChat(`${emoji} Partner je označen kao: ${gender}`);
-            });
-
-            connection.on("ReceiveMessage", msg => appendChat("👤 Partner: " + msg));
-
-            connection.on("ReceiveTyping", () => {
-                document.getElementById("typingStatus").innerText = "Partner kuca...";
-                clearTimeout(typingTimeout);
-                typingTimeout = setTimeout(() => {
-                    document.getElementById("typingStatus").innerText = "";
-                }, 1500);
-            });
-
-            connection.on("ReceiveOffer", async offer => {
-                await createPeerConnection();
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-                localStream = await getMediaStream();
-                attachLocalStream();
-
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-                connection.invoke("SendAnswer", answer);
-            });
-
-            connection.on("ReceiveAnswer", async answer => {
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-
-                const loader = document.getElementById("loader");
-                if (loader) loader.style.display = "none";
-            });
-
-
-            connection.on("ReceiveIceCandidate", async candidate => {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-            });
-
-            connection.on("PartnerDisconnected", () => {
-                appendChat("❌ Partner je napustio razgovor.");
-                document.getElementById("remoteVideo").srcObject = null;
-                if (peerConnection) peerConnection.close();
-            });
-
-            connection.on("CommonInterest", (interest) => {
-                appendChat(`💡 You both like: ${interest}`);
-            });
-
-
-            await connection.start();
-
-                    connection.on("UpdateOnlineUsers", (count) => {
-            document.getElementById("onlineUsers").textContent = `👥 ${count} online`;
-        });
-
+        // ===== Helpers =====
+        function showLoader(show) {
+            const el = document.getElementById("loader");
+            if (el) el.style.display = show ? "flex" : "none";
         }
 
-        async function startVideoCall() {
+        function setMainButton(state) {
+            const btn = document.getElementById("startBtn");
+            if (!btn) return;
 
-            document.getElementById("loader").style.display = "flex";
+            if (!state) {
+                btn.textContent = "Start";
+                hasStarted = false;
+            } else {
+                btn.textContent = "Next";
+                hasStarted = true;
+            }
+        }
 
-            const gender = document.getElementById("genderSelect").value;
-            if (!gender) return alert("Molimo izaberite pol pre početka.");
+        function appendChat(text, type = "system") {
+            const box = document.getElementById("chatBox");
+            if (!box) return;
 
+            const wrap = document.createElement("div");
+            wrap.className = `msg ${type}`;
 
-            if (!connection || connection.state !== "Connected") {
-                await setupSignalR(gender);
+            const body = document.createElement("div");
+            body.className = "body";
+            body.textContent = text;
+
+            const meta = document.createElement("div");
+            meta.className = "meta";
+
+            const time = new Date();
+            const hh = String(time.getHours()).padStart(2, "0");
+            const mm = String(time.getMinutes()).padStart(2, "0");
+
+            const who =
+                type === "me" ? "Ti" :
+                type === "partner" ? "Partner" :
+                "Info";
+
+            meta.textContent = `${who} • ${hh}:${mm}`;
+
+            wrap.appendChild(body);
+            wrap.appendChild(meta);
+            box.appendChild(wrap);
+
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function safeInvoke(method, ...args) {
+            if (!connection) return;
+            if (connection.state !== signalR.HubConnectionState.Connected) return;
+            try { await connection.invoke(method, ...args); }
+            catch (e) { console.warn("invoke failed", method, e); }
+        }
+
+        function getInterestFromUrl() {
+            const p = new URLSearchParams(window.location.search);
+            return p.get("interest") || "";
+        }
+
+        // ===== Segmented =====
+        function setupSegmented(segId, initialValue, onChange) {
+            const seg = document.getElementById(segId);
+            if (!seg) return;
+
+            const buttons = [...seg.querySelectorAll(".seg-btn")];
+
+            function setActive(val) {
+                buttons.forEach(b => b.classList.toggle("is-active", b.dataset.value === val));
             }
 
-            await createPeerConnection();
-            localStream = await getMediaStream();
-            attachLocalStream();
+            if (initialValue) setActive(initialValue);
 
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-            connection.invoke("SendOffer", offer);
-
-            appendChat(`🧑 Ti si označen kao: ${gender}`);
+            buttons.forEach(b => {
+                b.addEventListener("click", () => {
+                    if (b.disabled) {
+                        appendChat("🔒 Premium: filter po polu je dostupan samo premium korisnicima.", "system");
+                        return;
+                    }
+                    const val = b.dataset.value;
+                    setActive(val);
+                    onChange(val);
+                });
+            });
         }
 
-        async function createPeerConnection() {
-            peerConnection = new RTCPeerConnection(config);
+        // ===== Premium lock (Tražim) =====
+        function setGenderFilterLocked(locked) {
+            const seg = document.getElementById("genderFilterSeg");
+            if (!seg) return;
 
-            peerConnection.ontrack = event => {
-                document.getElementById("remoteVideo").srcObject = event.streams[0];
-            };
+            const btns = [...seg.querySelectorAll(".seg-btn")];
 
-            peerConnection.onicecandidate = event => {
-                if (event.candidate) connection.invoke("SendIceCandidate", event.candidate);
-            };
+            btns.forEach(b => {
+                const val = b.dataset.value;
+
+                if (val === "any") {
+                    b.disabled = false;
+                    b.classList.remove("is-locked");
+                    b.title = "";
+                    return;
+                }
+
+                b.disabled = locked;
+                b.classList.toggle("is-locked", locked);
+                b.title = locked ? "Premium feature 🔒" : "";
+            });
+
+            if (locked) {
+                selectedGenderFilter = "any";
+                btns.forEach(b => b.classList.toggle("is-active", b.dataset.value === "any"));
+            }
         }
 
+        async function applyPremiumUi() {
+            try {
+                const r = await fetch(PREMIUM_URL, { credentials: "same-origin" });
+                if (!r.ok) {
+                    isPremiumUser = false;
+                    setGenderFilterLocked(true);
+                    return;
+                }
+
+                const j = await r.json();
+                isPremiumUser = !!j.isPremium;
+
+                setGenderFilterLocked(!isPremiumUser);
+
+            } catch {
+                isPremiumUser = false;
+                setGenderFilterLocked(true);
+            }
+        }
+
+        // ===== Devices (chips) =====
+        function renderDeviceChips(containerId, devices, selectedId, onPick) {
+            const wrap = document.getElementById(containerId);
+            if (!wrap) return;
+
+            wrap.innerHTML = "";
+
+            if (!devices.length) {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.className = "device-chip";
+                b.textContent = "Nema uređaja";
+                b.disabled = true;
+                wrap.appendChild(b);
+                return;
+            }
+
+            devices.forEach((d, idx) => {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.className = "device-chip" + (d.deviceId === selectedId ? " is-active" : "");
+                b.textContent = d.label || ((d.kind === "videoinput" ? "Kamera " : "Mik ") + (idx + 1));
+                b.onclick = () => onPick(d.deviceId);
+                wrap.appendChild(b);
+            });
+        }
+
+        async function populateDeviceChips() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cams = devices.filter(d => d.kind === "videoinput");
+                const mics = devices.filter(d => d.kind === "audioinput");
+
+                if (!selectedVideoDeviceId && cams[0]) selectedVideoDeviceId = cams[0].deviceId;
+                if (!selectedAudioDeviceId && mics[0]) selectedAudioDeviceId = mics[0].deviceId;
+
+                renderDeviceChips("videoDeviceList", cams, selectedVideoDeviceId, async (id) => {
+                    selectedVideoDeviceId = id;
+                    await populateDeviceChips();
+                    await switchDevicesLive();
+                });
+
+                renderDeviceChips("audioDeviceList", mics, selectedAudioDeviceId, async (id) => {
+                    selectedAudioDeviceId = id;
+                    await populateDeviceChips();
+                    await switchDevicesLive();
+                });
+            } catch (e) {
+                console.warn("Cannot enumerate devices:", e);
+            }
+        }
+
+        async function requestMediaPermissionsAndListDevices() {
+            try {
+                const tmp = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                tmp.getTracks().forEach(t => t.stop());
+            } catch (e) {
+                console.warn("Permission blocked/failed:", e);
+            }
+            await populateDeviceChips();
+        }
+
+        // ===== Media =====
         async function getMediaStream() {
-            return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            const constraints = {
+                video: selectedVideoDeviceId ? { deviceId: { exact: selectedVideoDeviceId } } : true,
+                audio: selectedAudioDeviceId ? { deviceId: { exact: selectedAudioDeviceId } } : true
+            };
+            return await navigator.mediaDevices.getUserMedia(constraints);
         }
 
         function attachLocalStream() {
-            document.getElementById("localVideo").srcObject = localStream;
-
-            const bgVideo = document.getElementById("localVideoBackground");
-            bgVideo.muted = true;
-            bgVideo.playsInline = true;
-            bgVideo.srcObject = localStream;
-            bgVideo.play().catch(err => {
-                console.error("Background video failed to play:", err);
-            });
-
-            localStream.getTracks().forEach(track => {
-                if (!peerConnection.getSenders().some(sender => sender.track === track)) {
-                    peerConnection.addTrack(track, localStream);
-                }
-            });
+            const lv = document.getElementById("localVideo");
+            if (lv) lv.srcObject = localStream;
         }
 
-
-
-
-        function sendMessage() {
-            const msg = document.getElementById("messageInput").value;
-            if (msg.trim()) {
-                appendChat("🧑 Ti: " + msg);
-                connection.invoke("SendMessage", msg);
-                document.getElementById("messageInput").value = "";
+        async function ensureLocalStream() {
+            if (localStream) return true;
+            try {
+                localStream = await getMediaStream();
+                attachLocalStream();
+                return true;
+            } catch (e) {
+                appendChat("❌ Kamera/mikrofon nisu dostupni: " + (e?.message || e), "system");
+                return false;
             }
         }
 
-        function notifyTyping() {
-            if (connection?.state === "Connected") {
-                connection.invoke("SendTyping");
+        async function createPeerConnectionIfNeeded() {
+            if (peerConnection) return;
+
+            peerConnection = new RTCPeerConnection(rtcConfig);
+
+            peerConnection.ontrack = e => {
+                const rv = document.getElementById("remoteVideo");
+                if (!rv) return;
+                rv.srcObject = e.streams[0];
+                rv.play?.().catch(() => { });
+            };
+
+            peerConnection.onicecandidate = e => {
+                if (e.candidate) safeInvoke("SendIceCandidate", e.candidate);
+            };
+
+            if (localStream) {
+                localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+            }
+        }
+
+        function cleanupWebRtc() {
+            if (peerConnection) {
+                try { peerConnection.close(); } catch { }
+                peerConnection = null;
+            }
+            const rv = document.getElementById("remoteVideo");
+            if (rv) rv.srcObject = null;
+        }
+
+        async function switchDevicesLive() {
+            if (!localStream) return;
+
+            try {
+                const newStream = await getMediaStream();
+                const newVideoTrack = newStream.getVideoTracks()[0] || null;
+                const newAudioTrack = newStream.getAudioTracks()[0] || null;
+
+                const oldVideoTrack = localStream.getVideoTracks()[0] || null;
+                const oldAudioTrack = localStream.getAudioTracks()[0] || null;
+
+                if (peerConnection) {
+                    if (newVideoTrack) {
+                        const vs = peerConnection.getSenders().find(s => s.track && s.track.kind === "video");
+                        if (vs) await vs.replaceTrack(newVideoTrack);
+                    }
+                    if (newAudioTrack) {
+                        const as = peerConnection.getSenders().find(s => s.track && s.track.kind === "audio");
+                        if (as) await as.replaceTrack(newAudioTrack);
+                    }
+                }
+
+                oldVideoTrack?.stop();
+                oldAudioTrack?.stop();
+
+                localStream = new MediaStream(
+                    []
+                        .concat(newVideoTrack ? [newVideoTrack] : [])
+                        .concat(newAudioTrack ? [newAudioTrack] : [])
+                );
+
+                attachLocalStream();
+            } catch (e) {
+                console.warn("Switch devices failed:", e);
+                appendChat("⚠️ Ne mogu da promenim uređaj: " + (e?.message || e), "system");
+            }
+        }
+
+        // ===== SignalR =====
+        async function setupSignalR(gender, genderFilter) {
+            const interest = getInterestFromUrl();
+
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl(HUB_BASE + "?gender=" + encodeURIComponent(gender)
+                    + "&genderFilter=" + encodeURIComponent(genderFilter)
+                    + "&interest=" + encodeURIComponent(interest))
+                .withAutomaticReconnect([0, 1000, 2000, 5000])
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            connection.on("Searching", () => showLoader(true));
+
+            connection.on("UpdateOnlineUsers", count => {
+                const el = document.getElementById("onlineUsers");
+                if (el) el.textContent = "👥 " + count + " online";
+            });
+
+            connection.on("MatchFound", async payload => {
+                iAmInitiator = !!payload.initiator;
+                showLoader(false);
+
+                appendChat("✅ Partner povezan.", "system");
+                if (payload.partnerGender) appendChat("Partner: " + payload.partnerGender, "system");
+                if (payload.commonInterest) appendChat("💡 Zajedničko interesovanje: " + payload.commonInterest, "system");
+
+                setMainButton(true);
+
+                const ok = await ensureLocalStream();
+                if (!ok) return;
+
+                await createPeerConnectionIfNeeded();
+
+                if (iAmInitiator) {
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+                    await safeInvoke("SendOffer", offer);
+                }
+            });
+
+            connection.on("ReceiveOffer", async offer => {
+                const ok = await ensureLocalStream();
+                if (!ok) return;
+
+                await createPeerConnectionIfNeeded();
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                await safeInvoke("SendAnswer", answer);
+            });
+
+            connection.on("ReceiveAnswer", async answer => {
+                if (!peerConnection) return;
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                showLoader(false);
+            });
+
+            connection.on("ReceiveIceCandidate", async cand => {
+                if (!peerConnection) return;
+                try { await peerConnection.addIceCandidate(new RTCIceCandidate(cand)); }
+                catch (e) { console.warn("addIceCandidate failed", e); }
+            });
+
+            connection.on("ReceiveMessage", msg => appendChat(msg, "partner"));
+
+            connection.on("ReceiveTyping", () => {
+                const ts = document.getElementById("typingStatus");
+                if (!ts) return;
+
+                ts.innerHTML = `Partner kuca <span class="typing-dots"><span></span><span></span><span></span></span>`;
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => ts.innerHTML = "", 1500);
+            });
+
+            connection.on("PartnerDisconnected", async () => {
+                appendChat("❌ Partner je napustio razgovor.", "system");
+                cleanupWebRtc();
+                showLoader(true);
+
+                setMainButton(true);
+
+                if (!manualNext) {
+                    setTimeout(() => safeInvoke("StartMatch"), 200);
+                }
+            });
+
+            connection.onclose(() => setMainButton(false));
+
+            try {
+                await connection.start();
+            } catch (e) {
+                console.error("SignalR start failed:", e);
+                appendChat("❌ SignalR start failed: " + (e?.message || e), "system");
+                showLoader(false);
+                setMainButton(false);
+                return;
+            }
+
+            await safeInvoke("StartMatch");
+        }
+
+        // ===== Start / Next =====
+        async function start() {
+            if (typeof window.signalR === "undefined") {
+                alert("SignalR nije učitan. Proveri script path.");
+                return;
+            }
+
+            const gender = selectedGender;
+            const genderFilter = selectedGenderFilter;
+
+            if (!gender) {
+                alert("Molimo izaberite pol pre početka.");
+                return;
+            }
+
+            showLoader(true);
+
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                await setupSignalR(gender, genderFilter);
+            } else {
+                await safeInvoke("StartMatch");
             }
         }
 
         async function next() {
-            if (connection) await connection.stop();
-            if (peerConnection) peerConnection.close();
-            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            manualNext = true;
 
-            document.getElementById("remoteVideo").srcObject = null;
-            document.getElementById("localVideo").srcObject = null;
-            document.getElementById("chatBox").innerHTML = "";
-            document.getElementById("typingStatus").innerText = "";
+            cleanupWebRtc();
 
-            await startVideoCall();
-        }
-
-        function appendChat(text) {
             const box = document.getElementById("chatBox");
-            const line = document.createElement("div");
-            line.textContent = text;
-            box.appendChild(line);
-            box.scrollTop = box.scrollHeight;
+            if (box) box.innerHTML = "";
+
+            const ts = document.getElementById("typingStatus");
+            if (ts) ts.innerHTML = "";
+
+            showLoader(true);
+
+            await safeInvoke("Next");
+
+            manualNext = false;
         }
+
+        async function startOrNext() {
+            if (!hasStarted) {
+                await start();
+                setMainButton(true);
+                return;
+            }
+            await next();
+        }
+
+        // ===== Chat =====
+        async function sendMessage() {
+            const input = document.getElementById("messageInput");
+            const msg = (input?.value || "").trim();
+            if (!msg) return;
+
+            appendChat(msg, "me");
+            await safeInvoke("SendMessage", msg);
+
+            input.value = "";
+        }
+
+        let lastTypingSent = 0;
+
+        function notifyTyping() {
+            const now = Date.now();
+            if (now - lastTypingSent < 400) return; // max ~2-3 puta u sekundi
+            lastTypingSent = now;
+            safeInvoke("SendTyping");
+        }
+
 
         function toggleMic() {
             if (!localStream) return;
-            const mic = localStream.getAudioTracks()[0];
-            mic.enabled = !mic.enabled;
-            alert(mic.enabled ? "🎧 Mikrofon uključen" : "🔇 Mikrofon isključen");
+
+            const tracks = localStream.getAudioTracks();
+            if (!tracks.length) return;
+
+            const nowEnabled = !tracks[0].enabled;
+            tracks.forEach(t => t.enabled = nowEnabled);
+
+            const btn = document.getElementById("muteBtn");
+            if (btn) btn.textContent = nowEnabled ? "Mute" : "Unmute";
         }
 
-        function toggleCamera() {
-            if (!localStream) return;
-            const cam = localStream.getVideoTracks()[0];
-            cam.enabled = !cam.enabled;
-            alert(cam.enabled ? "📷 Kamera uključena" : "🚫 Kamera isključena");
-        }
-        // ENTER šalje poruku, ESC radi "Next"
-        document.addEventListener("keydown", function (e) {
-            const input = document.getElementById("messageInput");
+        // ===== Init =====
+        window.addEventListener("load", async () => {
+            setupSegmented("genderSeg", "", (val) => selectedGender = val);
+            setupSegmented("genderFilterSeg", "any", (val) => selectedGenderFilter = val);
 
-            // ENTER šalje poruku
-            if (e.key === "Enter" && input === document.activeElement) {
-                e.preventDefault();
-                sendMessage();
-            }
-
-            // ESC prekida i traži novog partnera
-            if (e.key === "Escape") {
-                e.preventDefault();
-                next();
-            }
-        });
-
-
-        // Fokusiraj se automatski na input polje kad se stranica učita
-        window.onload = () => {
-            document.getElementById("messageInput").focus();
-        };
-
-                function goHome() {
-            window.location.href = "/";
-        }
-
-
-    </script>
-
-    <script>
-
-                let touchStartX = null;
-
-        document.addEventListener("touchstart", function (e) {
-            touchStartX = e.changedTouches[0].screenX;
-        }, false);
-
-        document.addEventListener("touchend", function (e) {
-            if (touchStartX === null) return;
-
-            let touchEndX = e.changedTouches[0].screenX;
-            let diffX = touchStartX - touchEndX;
-
-            if (diffX > 50) {
-                // swipe left
-                next();
-            }
-
-            touchStartX = null;
-        }, false);
-
-
-    </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var nav = document.getElementById("mainNavbar");
-            if (nav) {
-                nav.style.display = "none";
-            }
-        });
-    </script>
-
-
-    <script>
-
-        async function populateVideoDevices() {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoSelect = document.getElementById("videoDevicesSelect");
-                if (!videoSelect) return;
-
-                videoSelect.innerHTML = "";
-
-                const videoDevices = devices.filter(d => d.kind === "videoinput");
-                videoDevices.forEach(device => {
-                    const option = document.createElement("option");
-                    option.value = device.deviceId;
-                    option.text = device.label || `Kamera ${videoSelect.length + 1}`;
-                    videoSelect.appendChild(option);
+            // device drawer toggle
+            const devicesBtn = document.getElementById("devicesBtn");
+            if (devicesBtn) {
+                devicesBtn.addEventListener("click", () => {
+                    document.getElementById("deviceDrawer")?.classList.toggle("is-open");
                 });
-            } catch (err) {
-                console.error("Error listing cameras:", err);
             }
-        }
 
-        // Pozovi odmah pri učitavanju stranice
-        document.addEventListener("DOMContentLoaded", populateVideoDevices);
+            await applyPremiumUi();
 
-        document.getElementById("videoDevicesSelect")?.addEventListener("change", async function (e) {
-            const deviceId = e.target.value;
+            // permissions + chips
+            await requestMediaPermissionsAndListDevices();
 
-            try {
-                const newStream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: { exact: deviceId } },
-                    audio: true
+            if (navigator.mediaDevices?.addEventListener) {
+                navigator.mediaDevices.addEventListener("devicechange", async () => {
+                    await populateDeviceChips();
                 });
-
-                // Zaustavi prethodni stream
-                if (localStream) {
-                    localStream.getTracks().forEach(track => track.stop());
-                }
-
-                localStream = newStream;
-
-                // Postavi novu kameru u localVideo preview
-                const localVideo = document.getElementById("localVideo");
-                if (localVideo) {
-                    localVideo.srcObject = localStream;
-                    localVideo.play();
-                }
-
-                // Postavi novu kameru i na background video
-                const bgVideo = document.getElementById("localVideoBackground");
-                if (bgVideo) {
-                    bgVideo.srcObject = localStream;
-                    bgVideo.play().catch(err => console.error(err));
-                }
-
-                // Zameni track u PeerConnection-u
-                if (peerConnection) {
-                    const videoTrack = localStream.getVideoTracks()[0];
-                    const videoSender = peerConnection.getSenders().find(s => s.track?.kind === "video");
-                    if (videoSender) {
-                        await videoSender.replaceTrack(videoTrack);
-                        console.log("✅ Track zamenjen u peerConnection.");
-                    } else {
-                        localStream.getTracks().forEach(track => {
-                            peerConnection.addTrack(track, localStream);
-                        });
-                    }
-                }
-
-            } catch (err) {
-                console.error("Error switching camera:", err);
             }
+
+            // start/next
+            document.getElementById("startBtn").addEventListener("click", startOrNext);
+
+            // ESC = Next (only if started)
+            document.addEventListener("keydown", e => {
+                if (e.key === "Escape" && hasStarted) next();
+            });
+
+            // Enter send
+            document.getElementById("messageInput").addEventListener("keydown", e => {
+                if (e.key === "Enter") { e.preventDefault(); sendMessage(); }
+            });
+
+            setMainButton(false);
         });
-
-
     </script>
-
 }
-
-@section Styles {
-    <style>
-        /* -------------------------------------------
-           GLOBAL RESET / LAYOUT
-        -------------------------------------------- */
-
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background: transparent;
-        }
-
-        .container {
-            max-width: 100vw;
-            height: 100vh;
-            display: flex;
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            box-sizing: border-box;
-        }
-
-
-        /* -------------------------------------------
-           VIDEO SECTION (LEFT SIDE)
-        -------------------------------------------- */
-
-        .video-column {
-            width: 50%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            gap: 8px; /* dodaj lep razmak između videa */
-            padding: 10px;
-            background-color: #000;
-            overflow-y: auto;
-        }
-
-            .video-column video {
-                width: 100%;
-                height: 45vh;
-                object-fit: cover;
-                border-radius: 10px;
-                background-color: #000;
-
-
-                border: 2px solid #fff;
-                box-shadow: 0 0 8px rgba(255,255,255,0.3);
-            }
-
-
-        /* -------------------------------------------
-           CHAT SECTION (RIGHT SIDE)
-        -------------------------------------------- */
-
-        .chat-column {
-            width: 50%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            background-color: #121212;
-            overflow: hidden;
-            box-sizing: border-box;
-        }
-
-        .online-counter {
-            color: #aaa;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        #chatBox {
-            flex: 1;
-            overflow-y: auto;
-            background: rgba(30, 30, 30, 0.6);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 10px;
-            color: #f1f1f1;
-            font-size: 15px;
-            line-height: 1.5;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            backdrop-filter: blur(6px);
-            height: 300px;
-            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.3);
-        }
-
-            #chatBox div {
-                padding: 8px 12px;
-                border-radius: 8px;
-                max-width: 80%;
-                word-break: break-word;
-                font-weight: 500;
-            }
-
-        .chat-you {
-            background: linear-gradient(145deg, #292929, #1d1d1d);
-            color: #f9f9f9;
-        }
-
-        .chat-partner {
-            background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
-            color: #f9f9f9;
-        }
-
-        #typingStatus {
-            font-style: italic;
-            color: #999;
-            margin-bottom: 6px;
-        }
-
-        /* -------------------------------------------
-           INPUT / BUTTONS
-        -------------------------------------------- */
-
-        .input-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: #1a1a1a;
-            border-top: 1px solid #333;
-            flex-shrink: 0;
-            position: sticky;
-            bottom: 0;
-            z-index: 100;
-        }
-
-            .input-wrapper input[type="text"] {
-                flex: 1;
-                padding: 10px 14px;
-                background-color: #222;
-                color: #f1f1f1;
-                border: 1px solid #333;
-                border-radius: 8px;
-                font-size: 15px;
-                transition: border-color 0.3s;
-            }
-
-                .input-wrapper input[type="text"]:focus {
-                    outline: none;
-                    border-color: #facc15;
-                }
-
-            .input-wrapper button {
-                background: linear-gradient(145deg, #facc15, #eab308);
-                color: #000;
-                border: none;
-                padding: 10px 16px;
-                border-radius: 8px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: transform 0.2s, background 0.3s;
-            }
-
-                .input-wrapper button:hover {
-                    transform: scale(1.05);
-                }
-
-        button {
-            background: linear-gradient(145deg, #facc15, #eab308);
-            color: #000;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.3s;
-        }
-
-            button:hover {
-                transform: scale(1.05);
-            }
-
-        .chat-controls {
-            margin-top: auto;
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            padding-top: 15px;
-            border-top: 1px solid #333;
-        }
-
-            .chat-controls button {
-                font-size: 15px;
-                padding: 10px 20px;
-            }
-
-        /* -------------------------------------------
-           GENDER SELECT
-        -------------------------------------------- */
-
-        .gender-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .gender-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background-color: #1f1f1f;
-            padding: 10px 14px;
-            border-radius: 8px;
-            color: #facc15;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-            .gender-option:hover {
-                background-color: #333;
-            }
-
-        /* -------------------------------------------
-           TOP BAR
-        -------------------------------------------- */
-
-        .top-bar {
-            width: 100%;
-            background: #1a1a1a;
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #333;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-            .top-bar .logo {
-                color: #facc15;
-                font-weight: 700;
-                font-size: 24px;
-                letter-spacing: 1px;
-                cursor: pointer;
-                user-select: none;
-                transition: color 0.3s ease;
-            }
-
-                .top-bar .logo:hover {
-                    color: #eab308;
-                    text-decoration: underline;
-                }
-
-            .top-bar .gender-select-wrapper {
-                display: flex;
-                align-items: center;
-            }
-
-                .top-bar .gender-select-wrapper select {
-                    height: 40px;
-                    padding: 0 14px;
-                    background-color: #222;
-                    color: #facc15;
-                    border: 1px solid #444;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    appearance: none;
-                    background-image: url("data:image/svg+xml,%3Csvg fill='white' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-                    background-repeat: no-repeat;
-                    background-position: right 12px center;
-                    background-size: 16px;
-                    padding-right: 40px;
-                    transition: background-color 0.3s, border-color 0.3s;
-                }
-
-                    .top-bar .gender-select-wrapper select:hover {
-                        background-color: #333;
-                        border-color: #666;
-                    }
-
-        /* -------------------------------------------
-           LOADER
-        -------------------------------------------- */
-
-        .loader-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #fff;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 30px 50px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .loader-spinner {
-            border: 6px solid #333;
-            border-top: 6px solid #facc15;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        .loader-text {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        /* -------------------------------------------
-           DEVICE SELECT
-        -------------------------------------------- */
-
-        .device-select-wrapper {
-            display: block;
-            margin-bottom: 15px;
-        }
-
-
-        .device-select {
-            background-color: #222;
-            color: #facc15;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 14px;
-            height: 40px;
-            flex: 1;
-            transition: border-color 0.3s;
-        }
-
-            .device-select:focus {
-                outline: none;
-                border-color: #eab308;
-            }
-
-
-
-        .background-video {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            z-index: -1;
-        }
-
-        @@media (max-width: 768px) {
-
-            .background-video {
-                display: none;
-            }
-
-            body {
-                background: #000;
-            }
-
-            .top-bar {
-                width: 100%;
-                background: #1a1a1a;
-                padding: 12px 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 1px solid #333;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            }
-
-            .container {
-                position: relative;
-                width: 100vw;
-                height: 100vh;
-                overflow: hidden;
-            }
-
-            .video-column {
-                width: 100%;
-                height: 100vh;
-                display: flex;
-                flex-direction: column;
-                justify-content: flex-start;
-                gap: 8px;
-                padding: 10px;
-            }
-
-                .video-column video {
-                    width: 100%;
-                    height: 30vh;
-                    object-fit: cover;
-                    border-radius: 10px;
-                    background-color: #000;
-                }
-
-            .chat-column {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                height: 40vh;
-                background: rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(1px);
-                z-index: 10;
-                display: flex;
-                flex-direction: column;
-                padding: 10px;
-                box-sizing: border-box;
-            }
-
-            #chatBox {
-                flex: 1;
-                background: transparent;
-                box-shadow: none;
-                overflow-y: auto;
-            }
-
-            .input-wrapper {
-                flex-direction: column;
-                gap: 8px;
-                background: rgba(0, 0, 0, 0.4);
-                padding: 10px;
-            }
-
-                .input-wrapper input[type="text"] {
-                    width: 100%;
-                }
-
-                .input-wrapper button {
-                    width: 100%;
-                }
-
-            .device-select-wrapper,
-            .esc-text,
-            .online-counter,
-            .mute-btn {
-                display: none;
-            }
-        }
-
-
-
-
-
-
-        @@media (max-width: 480px) {
-            .video-column video
-
-        {
-            max-height: 35vh;
-        }
-
-        }
-    </style>
-    }

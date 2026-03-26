@@ -1,42 +1,100 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-</head>
-<body>
-    <h2>Login</h2>
-    <form id="loginForm">
-        <label>Email:</label><br>
-        <input type="email" id="email" required><br><br>
-        <label>Password:</label><br>
-        <input type="password" id="password" required><br><br>
-        <button type="submit">Login</button>
-    </form>
-    <p id="result"></p>
+﻿@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Login";
+}
+
+<div class="container-center">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2 class="auth-title">Login</h2>
+            <p class="auth-subtitle">Welcome back. Sign in to continue.</p>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+            <div class="input-group">
+                <label for="email">Email</label>
+                <div class="input-wrap">
+                    <span class="input-icon">✉️</span>
+                    <input class="auth-input" type="email" id="email" required autocomplete="email" placeholder="you@example.com">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔒</span>
+                    <input class="auth-input" type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
+                </div>
+            </div>
+
+            <button id="loginBtn" class="auth-primary-btn" type="submit">Login</button>
+
+            <p id="result" class="auth-result"></p>
+
+            <div class="auth-divider">or</div>
+
+            <div class="auth-social">
+                <button class="auth-social-btn google" type="button" onclick="window.location.href='/auth/google-login'">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" class="google-logo">
+                    Continue with Google
+                </button>
+
+                <button class="auth-social-btn" type="button" onclick="window.location.href='/auth/facebook-login'">
+                    Continue with Facebook
+                </button>
+            </div>
+
+            <div class="auth-footer">
+                Don’t have an account?
+                <a href="/Home/Register">Register</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
     <script>
-        document.getElementById("loginForm").addEventListener("submit", async function(e) {
+        document.getElementById("loginForm").addEventListener("submit", async function (e) {
             e.preventDefault();
+
+            const btn = document.getElementById("loginBtn");
+            const resultEl = document.getElementById("result");
+
+            btn.disabled = true;
+            btn.textContent = "Logging in...";
+            resultEl.textContent = "";
+            resultEl.style.color = "rgba(255,255,255,.75)";
+
             const data = {
-                mail: document.getElementById("email").value,
+                // NOTE: ako tvoj backend očekuje "email" umesto "mail", promeni ovde
+                mail: document.getElementById("email").value.trim(),
                 password: document.getElementById("password").value
             };
-            const response = await fetch("/api/Users/Login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            });
-            if (response.ok) {
-                const result = await response.json();
-                document.getElementById("result").innerText = "Login successful.";
-                localStorage.setItem("jwt", result.token);
 
-                window.location.href = "/";
-            }
-            else {
-                const errorText = await response.text();
-                document.getElementById("result").innerText = "Login failed.";
+            try {
+                const response = await fetch("/api/Users/Login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const result = await response.json().catch(() => ({}));
+                    resultEl.style.color = "rgba(34,197,94,.95)";
+                    resultEl.textContent = "Login successful.";
+                    window.location.href = result.redirectUrl || "/";
+                } else {
+                    const errorText = await response.text();
+                    resultEl.style.color = "rgba(239,68,68,.95)";
+                    resultEl.textContent = errorText || "Login failed.";
+                }
+            } catch (err) {
+                resultEl.style.color = "rgba(239,68,68,.95)";
+                resultEl.textContent = "Network error. Try again.";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Login";
             }
         });
     </script>
-</body>
-</html>
+}

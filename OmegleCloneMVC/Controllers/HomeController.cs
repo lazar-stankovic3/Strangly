@@ -33,6 +33,13 @@ namespace OmegleCloneMVC.Controllers
             return View();
         }
 
+        [HttpGet("/about")]
+        public IActionResult About() 
+        { 
+            return View(); 
+        }
+
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

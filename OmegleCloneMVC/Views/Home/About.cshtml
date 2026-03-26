@@ -1,0 +1,87 @@
+﻿@{
+    ViewData["Title"] = "About";
+}
+
+<link rel="stylesheet" href="~/css/about.css" asp-append-version="true" />
+
+<div class="about-page">
+    <div class="about-card">
+        <div class="about-header">
+            <div class="about-brand">
+                <img src="~/images/logo-strangly.png" class="about-logo" alt="Strangly Logo" />
+                <div>
+                    <h1>About Strangly</h1>
+                    <p class="about-subtitle">Meet New People, Instantly — simple, fast, and anonymous.</p>
+                </div>
+            </div>
+
+            <div class="about-badges">
+                <span class="about-badge">Anonymous chat</span>
+                <span class="about-badge">Text & Video</span>
+                <span class="about-badge">Interest matching</span>
+            </div>
+        </div>
+
+        <div class="about-body">
+            <section class="about-section">
+                <h2>What is Strangly?</h2>
+                <p>
+                    Strangly is a random chat app that connects you with new people in seconds.
+                    You can jump into a <strong>Text Chat</strong> or <strong>Video Chat</strong>,
+                    and optionally add interests to get better matches.
+                </p>
+            </section>
+
+            <section class="about-grid">
+                <div class="about-feature">
+                    <div class="about-icon">⚡</div>
+                    <div>
+                        <h3>Instant matching</h3>
+                        <p>Start a chat immediately — no complicated setup.</p>
+                    </div>
+                </div>
+
+                <div class="about-feature">
+                    <div class="about-icon">🛡️</div>
+                    <div>
+                        <h3>Safety first</h3>
+                        <p>Clear rules, reporting, and moderation tools help keep the platform usable.</p>
+                    </div>
+                </div>
+
+                <div class="about-feature">
+                    <div class="about-icon">🎯</div>
+                    <div>
+                        <h3>Interests</h3>
+                        <p>Add interests to connect with people who share your vibe.</p>
+                    </div>
+                </div>
+
+                <div class="about-feature">
+                    <div class="about-icon">🔒</div>
+                    <div>
+                        <h3>Privacy-minded</h3>
+                        <p>We keep the experience lightweight and minimize what we store.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-section">
+                <h2>Quick links</h2>
+                <div class="about-links">
+                    <a class="about-link" href="/rules">Rules</a>
+                    <a class="about-link" href="/Home/Privacy">Privacy Policy</a>
+                    <a class="about-link" href="/support">Support</a>
+                </div>
+            </section>
+
+            <div class="about-cta">
+                <div>
+                    <div class="about-cta-title">Ready to meet someone new?</div>
+                    <div class="about-cta-sub">Start chatting in one click.</div>
+                </div>
+                <a class="about-cta-btn" href="/">Go to Home</a>
+            </div>
+        </div>
+    </div>
+</div>

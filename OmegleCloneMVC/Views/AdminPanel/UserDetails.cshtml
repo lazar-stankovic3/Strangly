@@ -1,0 +1,106 @@
+﻿@model OmegleCloneMVC.Controllers.AdminUserDetailsVm
+@{
+    ViewData["Title"] = $"User: {Model.User.Username}";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-v2.css" asp-append-version="true" />
+}
+
+<div class="admin-page">
+    <div class="admin-top">
+        <div>
+            <h1 class="admin-title">@Model.User.Username</h1>
+            <div class="admin-sub">@Model.User.Mail • ID: @Model.User.UserId</div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="admin-link" href="/AdminPanel">← Back</a>
+            <a class="admin-link admin-link-primary" href="/AdminPanel/Logs">Logs</a>
+        </div>
+    </div>
+
+    @if (TempData["Msg"] != null)
+    {
+        <div class="admin-toast">@TempData["Msg"]</div>
+    }
+
+    <div class="admin-cards" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+        <div class="admin-card">
+            <div class="admin-card-label">Status</div>
+            <div class="d-flex gap-2 flex-wrap mt-2">
+                <span class="admin-badge @(Model.User.IsActive ? "admin-badge--ok" : "admin-badge--off")">
+                    Active: @(Model.User.IsActive ? "Yes" : "No")
+                </span>
+
+                <span class="admin-badge @((Model.User.IsPremium && Model.User.PremiumUntil != null && Model.User.PremiumUntil >= DateTime.UtcNow) ? "admin-badge--premium" : "admin-badge--off")">
+                    Premium: @(Model.User.IsPremium ? "Yes" : "No")
+                </span>
+
+                @if (Model.User.PremiumUntil != null)
+                {
+                    <span class="admin-badge admin-badge--off">Until: @Model.User.PremiumUntil.Value.ToString("yyyy-MM-dd")</span>
+                }
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-card-label">Role</div>
+
+            <form asp-controller="AdminPanel" asp-action="SetRole" method="post" class="admin-roleform" style="margin-top:10px;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@Model.User.UserId" />
+
+                <select name="roleId" class="admin-select">
+                    @foreach (var r in Model.Roles)
+                    {
+                        <option value="@r.Id" selected="@(Model.User.RoleId == r.Id)">@r.Name</option>
+                    }
+                </select>
+
+                <button class="admin-mini-btn" type="submit">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="admin-table-wrap mt-3">
+        <div class="admin-actions" style="justify-content:flex-start;">
+            <form asp-controller="AdminPanel" asp-action="ToggleActive" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@Model.User.UserId" />
+                <button class="btn btn-sm btn-outline-info">Toggle Active</button>
+            </form>
+
+            <form asp-controller="AdminPanel" asp-action="GrantPremium" method="post" class="admin-premium">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@Model.User.UserId" />
+                <input class="admin-days" type="number" name="days" value="30" min="1" max="365" />
+                <button class="btn btn-sm btn-warning text-dark">Grant Premium</button>
+            </form>
+
+            <form asp-controller="AdminPanel" asp-action="RevokePremium" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@Model.User.UserId" />
+                <button class="btn btn-sm btn-outline-warning">Revoke Premium</button>
+            </form>
+
+            <form asp-controller="AdminPanel" asp-action="DeleteUser" method="post"
+                  onsubmit="return confirm('Obrisati korisnika @Model.User.Username ?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@Model.User.UserId" />
+                <button class="btn btn-sm btn-outline-danger">Delete User</button>
+            </form>
+        </div>
+
+        <hr style="border-color: rgba(255,255,255,.10);" />
+
+        <h3 style="font-weight:900; margin:0 0 10px;">Reset Password</h3>
+        <form asp-controller="AdminPanel" asp-action="ResetPassword" method="post" class="d-flex gap-2 flex-wrap">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="userId" value="@Model.User.UserId" />
+            <input name="newPassword" class="admin-reset" type="password" placeholder="New password (min 6)" />
+            <button class="btn btn-sm btn-warning text-dark">Reset</button>
+        </form>
+        <small class="text-muted">Napomena: ovo menja lozinku u bazi (PasswordHasher).</small>
+    </div>
+</div>

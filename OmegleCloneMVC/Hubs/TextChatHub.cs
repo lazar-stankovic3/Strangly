@@ -4,44 +4,43 @@ namespace OmegleCloneMVC.Hubs
 {
     public class TextChatHub : Hub
     {
-        private static Dictionary<string, string> UserInterests = new();
-        private static List<string> Waiting = new();
-        private static Dictionary<string, string> Pairs = new();
+        private static readonly object Sync = new();
+
+        private static readonly Dictionary<string, string> UserInterests = new();
+        private static readonly List<string> Waiting = new();
+        private static readonly Dictionary<string, string> Pairs = new();
 
         public override async Task OnConnectedAsync()
         {
-            var interest = Context.GetHttpContext()?.Request.Query["interest"].ToString()?.ToLower() ?? "";
+            var interest = (Context.GetHttpContext()?.Request.Query["interest"].ToString() ?? "")
+                .Trim().ToLowerInvariant();
 
-            UserInterests[Context.ConnectionId] = interest;
+            string? partner = null;
 
-            string partner = null;
-
-            lock (Waiting)
+            lock (Sync)
             {
-                var match = Waiting.FirstOrDefault(w =>
-                    UserInterests.ContainsKey(w) &&
-                    UserInterests[w] == interest &&
-                    w != Context.ConnectionId);
+                UserInterests[Context.ConnectionId] = interest;
 
-                if (match != null)
-                {
-                    partner = match;
-                    Waiting.Remove(match);
-                }
-                else if (Waiting.Count > 0)
-                {
-                    partner = Waiting[0]; // fallback
-                    Waiting.RemoveAt(0);
-                }
-                else
-                {
-                    Waiting.Add(Context.ConnectionId);
-                }
+                // pokušaj match: prvo isti interest, pa fallback bilo ko
+                partner = Waiting.FirstOrDefault(w =>
+                    w != Context.ConnectionId &&
+                    UserInterests.ContainsKey(w) &&
+                    !string.IsNullOrWhiteSpace(interest) &&
+                    UserInterests[w] == interest);
+
+                if (partner == null && Waiting.Count > 0)
+                    partner = Waiting[0];
 
                 if (partner != null)
                 {
+                    Waiting.Remove(partner);
                     Pairs[Context.ConnectionId] = partner;
                     Pairs[partner] = Context.ConnectionId;
+                }
+                else
+                {
+                    if (!Waiting.Contains(Context.ConnectionId))
+                        Waiting.Add(Context.ConnectionId);
                 }
             }
 
@@ -56,34 +55,76 @@ namespace OmegleCloneMVC.Hubs
 
         public async Task SendMessage(string msg)
         {
-            if (Pairs.TryGetValue(Context.ConnectionId, out var partner))
+            string? partner;
+            lock (Sync)
             {
-                await Clients.Client(partner).SendAsync("ReceiveMessage", msg);
+                Pairs.TryGetValue(Context.ConnectionId, out partner);
             }
+
+            if (partner != null)
+                await Clients.Client(partner).SendAsync("ReceiveMessage", msg);
         }
 
         public async Task SendTyping()
         {
-            if (Pairs.TryGetValue(Context.ConnectionId, out var partner))
+            string? partner;
+            lock (Sync)
             {
-                await Clients.Client(partner).SendAsync("ReceiveTyping");
+                Pairs.TryGetValue(Context.ConnectionId, out partner);
             }
+
+            if (partner != null)
+                await Clients.Client(partner).SendAsync("ReceiveTyping");
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception)
+        // ===== NEXT =====
+        public async Task Next()
         {
-            if (Pairs.TryGetValue(Context.ConnectionId, out var partner))
+            string? partner = null;
+
+            lock (Sync)
             {
-                await Clients.Client(partner).SendAsync("PartnerDisconnected");
-                Pairs.Remove(partner);
-                Pairs.Remove(Context.ConnectionId);
-            }
-            else
-            {
-                Waiting.Remove(Context.ConnectionId);
+                if (Pairs.TryGetValue(Context.ConnectionId, out partner))
+                {
+                    Pairs.Remove(partner);
+                    Pairs.Remove(Context.ConnectionId);
+
+                    if (!Waiting.Contains(partner))
+                        Waiting.Add(partner);
+                }
+
+                if (!Waiting.Contains(Context.ConnectionId))
+                    Waiting.Add(Context.ConnectionId);
             }
 
-            UserInterests.Remove(Context.ConnectionId);
+            if (partner != null)
+                await Clients.Client(partner).SendAsync("PartnerDisconnected");
+
+            await Clients.Caller.SendAsync("PartnerDisconnected");
+        }
+
+        public override async Task OnDisconnectedAsync(Exception? exception)
+        {
+            string? partner = null;
+
+            lock (Sync)
+            {
+                if (Pairs.TryGetValue(Context.ConnectionId, out partner))
+                {
+                    Pairs.Remove(partner);
+                    Pairs.Remove(Context.ConnectionId);
+                }
+                else
+                {
+                    Waiting.Remove(Context.ConnectionId);
+                }
+
+                UserInterests.Remove(Context.ConnectionId);
+            }
+
+            if (partner != null)
+                await Clients.Client(partner).SendAsync("PartnerDisconnected");
+
             await base.OnDisconnectedAsync(exception);
         }
     }

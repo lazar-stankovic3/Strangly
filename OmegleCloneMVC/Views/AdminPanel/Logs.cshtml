@@ -1,0 +1,69 @@
+﻿@model OmegleCloneMVC.Controllers.AdminLogsVm
+@{
+    ViewData["Title"] = "Admin Logs";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-v2.css" asp-append-version="true" />
+}
+
+<div class="admin-page">
+    <div class="admin-top">
+        <div>
+            <h1 class="admin-title">Audit Logs</h1>
+            <div class="admin-sub">Ko je šta menjao • Najnovije gore</div>
+        </div>
+
+        <a class="admin-link" href="/AdminPanel">← Back</a>
+    </div>
+
+    <div class="admin-table-wrap">
+        <div class="admin-table-scroll">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width: 170px;">Time (UTC)</th>
+                        <th style="width: 220px;">Actor</th>
+                        <th style="width: 140px;">Action</th>
+                        <th style="width: 280px;">Target</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in Model.Logs)
+                    {
+                        <tr>
+                            <td class="text-muted">@l.CreatedUtc.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td>@l.ActorEmail (@l.ActorUserId)</td>
+                            <td><span class="admin-badge admin-badge--off">@l.Action</span></td>
+                            <td class="text-muted">
+                                @if (l.TargetUserId != null)
+                                {
+                                    <span>@l.TargetEmail (@l.TargetUserId)</span>
+                                }
+                            </td>
+                            <td class="text-muted">@l.Details</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="admin-pagination">
+            <div class="admin-pageinfo">
+                Page @Model.Page / @Math.Max(Model.TotalPages, 1) • Total: @Model.Total
+            </div>
+
+            <div class="admin-pager">
+                @{
+                    var prev = Math.Max(1, Model.Page - 1);
+                    var next = Math.Min(Math.Max(Model.TotalPages, 1), Model.Page + 1);
+                }
+                <a class="admin-pill" href="@Url.Action("Logs", new { page = 1, pageSize = Model.PageSize })">« First</a>
+                <a class="admin-pill" href="@Url.Action("Logs", new { page = prev, pageSize = Model.PageSize })">‹ Prev</a>
+                <a class="admin-pill" href="@Url.Action("Logs", new { page = next, pageSize = Model.PageSize })">Next ›</a>
+                <a class="admin-pill" href="@Url.Action("Logs", new { page = Math.Max(Model.TotalPages, 1), pageSize = Model.PageSize })">Last »</a>
+            </div>
+        </div>
+    </div>
+</div>
