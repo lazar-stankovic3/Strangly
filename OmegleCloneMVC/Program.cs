@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -84,8 +86,43 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// ✅ SignalR
-builder.Services.AddSignalR();
+// ✅ SignalR – hardened
+builder.Services.AddSignalR(hub =>
+{
+    hub.MaximumReceiveMessageSize = 64 * 1024;          // 64 KB max payload (blocks huge SDP/ICE exploits)
+    hub.ClientTimeoutInterval     = TimeSpan.FromSeconds(60);
+    hub.KeepAliveInterval         = TimeSpan.FromSeconds(20);
+    hub.HandshakeTimeout          = TimeSpan.FromSeconds(15);
+    hub.EnableDetailedErrors      = builder.Environment.IsDevelopment(); // no stack traces in production
+})
+.AddJsonProtocol(options =>
+{
+    options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+});
+
+// ✅ Rate limiting (HTTP endpoints only; WebSocket/SignalR throttled in hub)
+builder.Services.AddRateLimiter(opts =>
+{
+    // General page requests: 120 req/min per IP
+    opts.AddFixedWindowLimiter("general", o =>
+    {
+        o.PermitLimit        = 120;
+        o.Window             = TimeSpan.FromMinutes(1);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit         = 5;
+    });
+
+    // Auth endpoints (login/register): 10 req/min per IP – brute-force protection
+    opts.AddFixedWindowLimiter("auth", o =>
+    {
+        o.PermitLimit        = 10;
+        o.Window             = TimeSpan.FromMinutes(1);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit         = 0;
+    });
+
+    opts.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 // MVC
 builder.Services.AddControllersWithViews();
@@ -159,14 +196,17 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+app.UseRateLimiter();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}")
+    .RequireRateLimiting("general");
 
-// ✅ HUB rute
+// SignalR hubs – no HTTP rate limiter (WebSocket; throttled inside hub)
 app.MapHub<ChatHub>("/chatHub");
 app.MapHub<TextChatHub>("/textChatHub");
 

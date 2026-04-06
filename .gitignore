@@ -1,6 +1,10 @@
-bin/\nobj/\n.vs/\nout/
+bin/
+obj/
+.vs/
+out/
 
-appsettings.json
 appsettings.Development.json
+.env
+OmegleCloneMVC/Properties/launchSettings.json
 **/bin/
 **/obj/

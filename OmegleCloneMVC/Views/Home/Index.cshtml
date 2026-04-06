@@ -1,27 +1,79 @@
-﻿@{
+@{
     ViewData["Title"] = "Welcome";
     ViewData["BodyClass"] = "home-page";
 }
 <div class="home-hero">
-    <div class="hero-content">
-        <img src="~/images/logo-strangly.png" alt="Strangly Logo" class="hero-logo" />
-        <h1 class="hero-title">Strangly</h1>
-        <p class="subtitle">Meet New People, Instantly.</p>
+    <div class="hero-wrap">
+        <div class="hero-content hero-animate">
+            <div class="hero-top">
+                <img src="~/images/logo-strangly.png" alt="Strangly Logo" class="hero-logo" />
+                <div class="hero-online-pill">
+                    <span class="online-dot-pulse"></span>
+                    <span id="heroOnlineCount">—</span>&nbsp;online now
+                </div>
+            </div>
 
-        <input id="interestInput" type="text" placeholder="Unesi svoja interesovanja..." />
+            <div class="hero-text">
+                <h1 class="hero-title">Meet strangers,<br><span class="hero-accent">instantly.</span></h1>
+                <p class="subtitle">Anonymous video &amp; text chat with people worldwide. No account needed.</p>
+            </div>
 
-        <div class="hero-buttons">
-            <button class="chat-btn" onclick="startTextChat()">Text Chat</button>
-            <button class="chat-btn" onclick="startVideoChat()">Video Chat</button>
+            <div class="hero-divider"></div>
+
+            <div class="hero-input-section">
+                <label class="hero-input-label" for="interestInput">
+                    Your interests
+                    <span class="hero-input-optional">optional</span>
+                </label>
+                <div class="hero-input-wrap">
+                    <span class="hero-input-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </span>
+                    <input id="interestInput" type="text" placeholder="e.g. music, gaming, travel..." autocomplete="off" />
+                    <span class="hero-input-enter" id="enterHint">↵</span>
+                </div>
+                <p class="hero-input-hint">Get matched with people who share your interests</p>
+            </div>
+
+            <div class="hero-buttons">
+                <button class="chat-btn chat-btn--text" onclick="startTextChat()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Text Chat
+                </button>
+                <button class="chat-btn chat-btn--video" onclick="startVideoChat()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    Video Chat
+                </button>
+            </div>
+
+            <div class="hero-badges">
+                <span class="hero-badge">🔒 Anonymous</span>
+                <span class="hero-badge">⚡ Instant match</span>
+                <span class="hero-badge">🌍 Global</span>
+                <span class="hero-badge">🆓 Free</span>
+            </div>
+        </div>
+
+        <div class="hero-stats hero-animate-delay">
+            <div class="hero-stat">
+                <span class="hero-stat-num">2M+</span>
+                <span class="hero-stat-label">Users worldwide</span>
+            </div>
+            <div class="hero-stat-sep"></div>
+            <div class="hero-stat">
+                <span class="hero-stat-num">50K+</span>
+                <span class="hero-stat-label">Chats today</span>
+            </div>
+            <div class="hero-stat-sep"></div>
+            <div class="hero-stat">
+                <span class="hero-stat-num">190+</span>
+                <span class="hero-stat-label">Countries</span>
+            </div>
         </div>
     </div>
 </div>
 
-
 <canvas id="interactive-background"></canvas>
-
-
-
 
 <footer class="home-footer">
     <div class="footer-links">
@@ -30,30 +82,49 @@
         <a href="/Home/Privacy">Privacy</a>
         <a href="/support">Support</a>
     </div>
-    <div class="footer-copy">© 2025 Strangly</div>
+    <div class="footer-copy">© 2026 Strangly</div>
 </footer>
 
 <div id="agreementModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
-        <h2>Confirmation Required</h2>
+        <div class="modal-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h2>Before you continue</h2>
         <p>
-            Please confirm that you have read and agree to our
-            <a href="/rules" target="_blank">Rules</a> and
+            Please confirm you've read and agree to our
+            <a href="/rules" target="_blank">Community Rules</a> and
             <a href="/Home/Privacy" target="_blank">Privacy Policy</a>.
         </p>
         <label class="checkbox-label">
             <input type="checkbox" id="agreementCheckbox" />
-            I have read and agree to the terms.
+            I agree to the terms and I am 18+ years old.
         </label>
         <div class="modal-buttons">
             <button onclick="proceedToChat()">Continue</button>
-            <button onclick="closeModal()">Cancel</button>
+            <button class="modal-cancel-btn" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 </div>
 
 
 @section Scripts {
+    <script src="/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script>
+        // live online counter (read-only SignalR connection)
+        (() => {
+            const conn = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.None)
+                .build();
+            conn.on("UpdateOnlineUsers", n => {
+                const el = document.getElementById("heroOnlineCount");
+                if (el) el.textContent = n.toLocaleString();
+            });
+            conn.start().catch(() => {});
+        })();
+    </script>
     <script>
         let redirectUrl = "";
 
@@ -81,13 +152,38 @@
         function proceedToChat() {
             const checkbox = document.getElementById("agreementCheckbox");
             if (!checkbox.checked) {
-                alert("You must agree to the terms before continuing.");
+                checkbox.closest('.checkbox-label').classList.add('shake');
+                setTimeout(() => checkbox.closest('.checkbox-label').classList.remove('shake'), 500);
                 return;
             }
             window.location.href = redirectUrl;
         }
-    </script>
 
+        // Press Enter in interest field → start text chat
+        document.getElementById("interestInput").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") startTextChat();
+        });
+
+        // Show/hide Enter hint
+        const input = document.getElementById("interestInput");
+        const enterHint = document.getElementById("enterHint");
+        input.addEventListener("input", () => {
+            enterHint.classList.toggle("visible", input.value.length > 0);
+        });
+        input.addEventListener("focus", () => {
+            enterHint.classList.toggle("visible", input.value.length > 0);
+        });
+
+        // Close modal on overlay click
+        document.getElementById("agreementModal").addEventListener("click", function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Close modal on Escape
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") closeModal();
+        });
+    </script>
 
     <script>
         document.addEventListener('mousemove', function (e) {
@@ -130,16 +226,14 @@
             bounce: 0.55,
             edgePadding: 2,
 
-            // visuals
             dotAlphaMin: 0.16,
             dotAlphaMax: 0.46,
             glow: 12,
             glowAlpha: 0.20,
 
-            // new visuals
             haloRadius: 220,
             haloAlpha: 0.10,
-            parallax: 0.05,     // subtle depth push
+            parallax: 0.05,
             twinkleSpeed: 0.015
           };
 
@@ -195,89 +289,65 @@
             constructor() {
               this.baseX = Math.random() * w;
               this.baseY = Math.random() * h;
-
-              // depth layer (0..1)
               this.z = Math.random();
-              const depth = 0.65 + this.z * 0.55; // closer -> faster
-
+              const depth = 0.65 + this.z * 0.55;
               this.x = this.baseX;
               this.y = this.baseY;
-
               const a = Math.random() * Math.PI * 2;
               const s = (Math.random() * 0.6 + 0.2) * cfg.drift * depth;
               this.vx = Math.cos(a) * s;
               this.vy = Math.sin(a) * s;
-
               this.r = (Math.random() * 2.1 + 1.1) * (0.75 + this.z * 0.7);
               this.alpha = cfg.dotAlphaMin + Math.random() * (cfg.dotAlphaMax - cfg.dotAlphaMin);
-
               this.tw = Math.random() * 0.7 + 0.15;
               this.phase = Math.random() * Math.PI * 2;
               this.aNow = this.alpha;
             }
 
             step(t) {
-              // parallax: base target shifts slightly with mouse (depth effect)
               const px = (mouse.x - w * 0.5) * cfg.parallax * (this.z - 0.5);
               const py = (mouse.y - h * 0.5) * cfg.parallax * (this.z - 0.5);
-
               const targetX = this.baseX + px;
               const targetY = this.baseY + py;
-
-              // return
               const dx0 = targetX - this.x;
               const dy0 = targetY - this.y;
               this.vx += dx0 * cfg.returnForce;
               this.vy += dy0 * cfg.returnForce;
-
-              // mouse interaction
               const dx = this.x - mouse.x;
               const dy = this.y - mouse.y;
               const d2 = dx * dx + dy * dy;
-
               if (d2 < cfg.mouseDist2) {
                 const d = Math.max(20, Math.sqrt(d2));
                 const force = (cfg.mouseDist - d) / cfg.mouseDist;
-
                 const repel = cfg.repelStrength * force * (0.7 + this.z * 0.6);
                 this.vx += (dx / d) * repel;
                 this.vy += (dy / d) * repel;
-
                 if (mouseTarget.down) {
                   const att = cfg.attractStrength * force;
                   this.vx -= (dx / d) * att;
                   this.vy -= (dy / d) * att;
                 }
               }
-
               this.vx *= cfg.friction;
               this.vy *= cfg.friction;
-
-              // speed limit
               const sp = Math.hypot(this.vx, this.vy);
               if (sp > cfg.maxSpeed) {
                 const k = cfg.maxSpeed / sp;
                 this.vx *= k;
                 this.vy *= k;
               }
-
               this.x += this.vx;
               this.y += this.vy;
-
-              // soft bounce edges
               const pad = cfg.edgePadding;
               if (this.x < pad) { this.x = pad; this.vx *= -cfg.bounce; }
               if (this.x > w - pad) { this.x = w - pad; this.vx *= -cfg.bounce; }
               if (this.y < pad) { this.y = pad; this.vy *= -cfg.bounce; }
               if (this.y > h - pad) { this.y = h - pad; this.vy *= -cfg.bounce; }
-
-              // twinkle
               this.phase += cfg.twinkleSpeed;
               this.aNow = this.alpha * (0.72 + 0.28 * Math.sin(this.phase + t * 0.001) * this.tw);
             }
           }
 
-          // ---- Grid
           let gridSize = cfg.linkDist;
           let gridCols = 0, gridRows = 0;
           let grid = [];
@@ -306,7 +376,6 @@
             while (particles.length > target) particles.pop();
           }
 
-          // ---- Visuals
           function drawVignetteGlow() {
             const g = ctx.createRadialGradient(w * 0.18, h * 0.12, 0, w * 0.18, h * 0.12, Math.max(w, h) * 0.9);
             g.addColorStop(0, "rgba(250,204,21,0.09)");
@@ -326,7 +395,6 @@
             ctx.fillRect(0, 0, w, h);
           }
 
-          // Gradient line between two points (looks much nicer than flat color)
           function strokeGradientLine(x1, y1, x2, y2, a) {
             const g = ctx.createLinearGradient(x1, y1, x2, y2);
             g.addColorStop(0, `rgba(255,255,255,${a * 0.22})`);
@@ -341,35 +409,27 @@
 
           function drawLinks() {
             ctx.lineWidth = 1;
-
             for (let cy = 0; cy < gridRows; cy++) {
               for (let cx = 0; cx < gridCols; cx++) {
                 const cell = grid[cy * gridCols + cx];
                 if (!cell.length) continue;
-
                 for (const p of cell) {
                   for (let ny = cy - 1; ny <= cy + 1; ny++) {
                     if (ny < 0 || ny >= gridRows) continue;
                     for (let nx = cx - 1; nx <= cx + 1; nx++) {
                       if (nx < 0 || nx >= gridCols) continue;
-
                       const ncell = grid[ny * gridCols + nx];
                       for (const q of ncell) {
                         if (q === p) continue;
-
                         const dx = p.x - q.x;
                         const dy = p.y - q.y;
                         const d2 = dx * dx + dy * dy;
-
                         if (d2 < cfg.linkDist2) {
                           const t = 1 - d2 / cfg.linkDist2;
-
-                          // boost near mouse
                           const mx = (p.x + q.x) * 0.5 - mouse.x;
                           const my = (p.y + q.y) * 0.5 - mouse.y;
                           const md2 = mx * mx + my * my;
                           const mBoost = md2 < cfg.mouseDist2 ? 0.30 : 0;
-
                           const a = (0.06 + 0.24 * t + mBoost) * (0.75 + 0.25 * (p.z + q.z) * 0.5);
                           strokeGradientLine(p.x, p.y, q.x, q.y, a);
                         }
@@ -384,52 +444,39 @@
           function drawDots() {
             ctx.shadowColor = `rgba(250,204,21,${cfg.glowAlpha})`;
             ctx.shadowBlur = cfg.glow;
-
             for (const p of particles) {
-              // tiny white-ish highlight for depth
               const hi = 0.12 + p.z * 0.08;
               ctx.fillStyle = `rgba(250,204,21,${p.aNow})`;
               ctx.beginPath();
               ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
               ctx.fill();
-
               ctx.fillStyle = `rgba(255,255,255,${hi})`;
               ctx.beginPath();
               ctx.arc(p.x - p.r * 0.25, p.y - p.r * 0.25, p.r * 0.45, 0, Math.PI * 2);
               ctx.fill();
             }
-
             ctx.shadowBlur = 0;
           }
 
-          // ---- Loop
           let last = performance.now();
           function frame(now) {
             const dt = Math.min(40, now - last);
             last = now;
-
-            // smooth mouse
             const lerp = 1 - Math.pow(0.001, dt / 16.67);
             mouse.x += (mouseTarget.x - mouse.x) * lerp;
             mouse.y += (mouseTarget.y - mouse.y) * lerp;
-
             ctx.clearRect(0, 0, w, h);
-
             drawVignetteGlow();
             drawMouseHalo();
-
             for (const p of particles) p.step(now);
-
             fillGrid();
             drawLinks();
             drawDots();
-
             rafId = requestAnimationFrame(frame);
           }
 
           canvas.style.width = "100vw";
           canvas.style.height = "100vh";
-
           resize();
           cancelAnimationFrame(rafId);
           rafId = requestAnimationFrame(frame);
@@ -457,8 +504,8 @@
 
           window.addEventListener("mousemove", (e) => {
             if (sticky) return;
-            cursor.style.width = "14px";
-            cursor.style.height = "14px";
+            cursor.style.width = "22px";
+            cursor.style.height = "22px";
             cursor.style.borderRadius = "0px";
             cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
           }, { passive: true });
@@ -473,17 +520,13 @@
               document.documentElement.classList.remove("custom-cursor--sticky");
               return;
             }
-
             sticky = true; targetEl = el;
             document.documentElement.classList.add("custom-cursor--sticky");
-
             const rect = targetEl.getBoundingClientRect();
             const pad = 8;
-
             const w = rect.width + pad * 2;
             const h = rect.height + pad * 2;
             const r = Math.max(10, getRadius(targetEl) + pad);
-
             cursor.style.width = `${w}px`;
             cursor.style.height = `${h}px`;
             cursor.style.borderRadius = `${r}px`;
@@ -506,12 +549,4 @@
           });
         })();
     </script>
-
-
-
-
-
-
-
 }
-

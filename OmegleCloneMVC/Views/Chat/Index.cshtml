@@ -88,15 +88,20 @@
     <script src="/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
 
     <script>
-        const HUB_BASE = "/chatHub";
+        const HUB_BASE    = "/chatHub";
         const PREMIUM_URL = "/Subscription/PremiumStatus";
+        const MAX_MSG_LEN = 500; // must match server-side MaxMessageLength
 
         // ===== WebRTC/SignalR state =====
-        let localStream = null;
+        let localStream    = null;
         let peerConnection = null;
-        let connection = null;
-        let typingTimeout = null;
-        let iAmInitiator = false;
+        let connection     = null;
+        let typingTimeout  = null;
+        let iAmInitiator   = false;
+
+        // manualNext: set true before invoking Next(), cleared in PartnerDisconnected handler.
+        // This prevents the auto-StartMatch call that PartnerDisconnected would otherwise trigger,
+        // because the server already handles finding the next partner inside Next().
         let manualNext = false;
 
         // one button (Start -> Next)
@@ -104,6 +109,10 @@
 
         // premium UI flag
         let isPremiumUser = false;
+
+        // Client-side Next() debounce (server also rate-limits, but this avoids unnecessary calls)
+        let lastNextMs = 0;
+        const NEXT_DEBOUNCE_MS = 1500;
 
         // ===== UI state (segmented/chips) =====
         let selectedGender = "";
@@ -485,24 +494,40 @@
             });
 
             connection.on("PartnerDisconnected", async () => {
+                // Consume the manualNext flag atomically here (before any async gap).
+                // If Next() was the trigger, manualNext=true → server already handles rematch.
+                // If partner disconnected naturally, manualNext=false → we call StartMatch.
+                const wasManual = manualNext;
+                manualNext = false;
+
                 appendChat("❌ Partner je napustio razgovor.", "system");
                 cleanupWebRtc();
                 showLoader(true);
 
+                // Clear typing indicator immediately
+                const ts = document.getElementById("typingStatus");
+                if (ts) ts.innerHTML = "";
+                clearTimeout(typingTimeout);
+
                 setMainButton(true);
 
-                if (!manualNext) {
+                if (!wasManual) {
                     setTimeout(() => safeInvoke("StartMatch"), 200);
                 }
             });
 
             connection.onclose(() => setMainButton(false));
 
+            connection.onreconnected(() => {
+                appendChat("✅ Ponovo povezano.", "system");
+                safeInvoke("StartMatch");
+            });
+
             try {
                 await connection.start();
             } catch (e) {
                 console.error("SignalR start failed:", e);
-                appendChat("❌ SignalR start failed: " + (e?.message || e), "system");
+                appendChat("❌ Connection failed. Please refresh the page.", "system");
                 showLoader(false);
                 setMainButton(false);
                 return;
@@ -521,11 +546,6 @@
             const gender = selectedGender;
             const genderFilter = selectedGenderFilter;
 
-            if (!gender) {
-                alert("Molimo izaberite pol pre početka.");
-                return;
-            }
-
             showLoader(true);
 
             if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
@@ -536,6 +556,14 @@
         }
 
         async function next() {
+            // Client-side debounce (server enforces 1.5s too, but this avoids wasted round-trips)
+            const now = Date.now();
+            if (now - lastNextMs < NEXT_DEBOUNCE_MS) return;
+            lastNextMs = now;
+
+            // Set BEFORE the invoke. The PartnerDisconnected handler (which fires during/after
+            // the invoke) reads this flag and skips the auto-StartMatch because the server's
+            // Next() already handles finding a new match.
             manualNext = true;
 
             cleanupWebRtc();
@@ -545,12 +573,12 @@
 
             const ts = document.getElementById("typingStatus");
             if (ts) ts.innerHTML = "";
+            clearTimeout(typingTimeout);
 
             showLoader(true);
 
             await safeInvoke("Next");
-
-            manualNext = false;
+            // Do NOT reset manualNext here — it is reset inside the PartnerDisconnected handler.
         }
 
         async function startOrNext() {
@@ -565,8 +593,11 @@
         // ===== Chat =====
         async function sendMessage() {
             const input = document.getElementById("messageInput");
-            const msg = (input?.value || "").trim();
+            let msg = (input?.value || "").trim();
             if (!msg) return;
+
+            // Enforce max length client-side (server also enforces this)
+            if (msg.length > MAX_MSG_LEN) msg = msg.slice(0, MAX_MSG_LEN);
 
             appendChat(msg, "me");
             await safeInvoke("SendMessage", msg);

@@ -28,14 +28,14 @@ namespace OmegleCloneMVC.Controllers
         }
 
         [HttpPost("Registration")]
-        public IActionResult Registration([FromBody] UserDto userDTO)
+        public async Task<IActionResult> Registration([FromBody] UserDto userDTO)
         {
             if (!ModelState.IsValid)
                 return BadRequest("Neispravni podaci.");
 
             var email = userDTO.Mail.Trim().ToLowerInvariant();
 
-            var existingUser = _context.User.FirstOrDefault(x => x.Mail.ToLower() == email);
+            var existingUser = await _context.User.FirstOrDefaultAsync(x => x.Mail.ToLower() == email);
             if (existingUser != null)
                 return BadRequest("Korisnik sa tim emailom već postoji.");
 
@@ -51,7 +51,7 @@ namespace OmegleCloneMVC.Controllers
 
             newUser.Password = hasher.HashPassword(newUser, userDTO.Password);
             _context.User.Add(newUser);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok("Uspešna registracija");
         }
@@ -64,9 +64,9 @@ namespace OmegleCloneMVC.Controllers
 
             var email = loginDTO.Mail.Trim().ToLowerInvariant();
 
-            var user = _context.User
+            var user = await _context.User
                 .Include(u => u.Role)
-                .FirstOrDefault(x => x.Mail.ToLower() == email);
+                .FirstOrDefaultAsync(x => x.Mail.ToLower() == email);
 
             if (user == null)
                 return BadRequest("Pogrešan email ili lozinka");
@@ -78,7 +78,7 @@ namespace OmegleCloneMVC.Controllers
                 return BadRequest("Pogrešan email ili lozinka");
 
             user.IsActive = 1;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             // COOKIE AUTH (glavno za MVC)
             var claims = new List<Claim>
@@ -150,6 +150,13 @@ namespace OmegleCloneMVC.Controllers
         [HttpGet("GetUser")]
         public IActionResult GetUser([FromQuery] int id)
         {
+            var requesterId = User.FindFirstValue("UserId");
+            var requesterRole = User.FindFirstValue(ClaimTypes.Role);
+            var isAdmin = string.Equals(requesterRole, "Admin", StringComparison.OrdinalIgnoreCase);
+
+            if (!isAdmin && requesterId != id.ToString())
+                return Forbid();
+
             var user = _context.User.Include(u => u.Role).FirstOrDefault(x => x.UserId == id);
             if (user == null) return NotFound();
 
