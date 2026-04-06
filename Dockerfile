@@ -1,29 +1,34 @@
+# ============================================================
 # 1. BUILD STAGE
+# ============================================================
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-# Kopiraj solution fajl
-COPY *.sln ./
+# Kopiraj samo solution + csproj prvo (bolji layer cache)
+# restore se ne ponavlja dok se dependencies ne promijene
+COPY OmegleCloneMVC.sln ./
+COPY OmegleCloneMVC/OmegleCloneMVC.csproj OmegleCloneMVC/
+RUN dotnet restore OmegleCloneMVC/OmegleCloneMVC.csproj
 
-# Kopiraj csproj fajl i restore
-COPY OmegleCloneMVC/*.csproj ./OmegleCloneMVC/
-RUN dotnet restore
+# Sada kopiraj ostatak koda i publishuj
+COPY OmegleCloneMVC/ OmegleCloneMVC/
+WORKDIR /src/OmegleCloneMVC
+RUN dotnet publish -c Release -o /app/out --no-restore
 
-# Kopiraj ceo kod
-COPY OmegleCloneMVC/. ./OmegleCloneMVC/
-WORKDIR /app/OmegleCloneMVC
-
-# Build
-RUN dotnet publish -c Release -o out
-
+# ============================================================
 # 2. RUNTIME STAGE
+# ============================================================
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
-COPY --from=build /app/OmegleCloneMVC/out ./
 
-# Render environment port
-ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
+# Non-root user (security)
+RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+USER appuser
+
+COPY --from=build /app/out ./
 
 EXPOSE 10000
 
-ENTRYPOINT ["dotnet", "OmegleCloneMVC.dll"]
+# Shell forma CMD-a je potrebna da bi se $PORT expandovao u runtime-u.
+# Render postavlja PORT=10000; fallback je 10000 ako PORT nije setovan.
+CMD ASPNETCORE_URLS=http://0.0.0.0:${PORT:-10000} dotnet OmegleCloneMVC.dll

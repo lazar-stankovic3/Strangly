@@ -1,0 +1,8 @@
+**/.vs
+**/.git
+**/.github
+**/bin
+**/obj
+**/*.user
+**/*.suo
+.dockerignore

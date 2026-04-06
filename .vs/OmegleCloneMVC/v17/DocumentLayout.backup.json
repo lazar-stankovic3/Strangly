@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|c:\\users\\lazar\\source\\repos\\omegleclonemvc\\omegleclonemvc\\.env||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|solutionrelative:omegleclonemvc\\.env||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|c:\\users\\lazar\\source\\repos\\omegleclonemvc\\omegleclonemvc\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|solutionrelative:omegleclonemvc\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -31,6 +35,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": ".env",
+              "DocumentMoniker": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\.env",
+              "RelativeDocumentMoniker": "OmegleCloneMVC\\.env",
+              "ToolTip": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\.env",
+              "RelativeToolTip": "OmegleCloneMVC\\.env",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-04-06T14:31:52.228Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\Program.cs",
               "RelativeDocumentMoniker": "OmegleCloneMVC\\Program.cs",
@@ -43,7 +60,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "OmegleCloneMVC\\Controllers\\AuthController.cs",
@@ -55,7 +72,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Index.cshtml",
               "DocumentMoniker": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\Views\\Home\\Index.cshtml",
               "RelativeDocumentMoniker": "OmegleCloneMVC\\Views\\Home\\Index.cshtml",
@@ -67,7 +84,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "site.css",
               "DocumentMoniker": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\wwwroot\\css\\site.css",
               "RelativeDocumentMoniker": "OmegleCloneMVC\\wwwroot\\css\\site.css",

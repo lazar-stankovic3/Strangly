@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "mcp__claude_ai_Stripe__stripe_api_execute"
     ]
   }
 }

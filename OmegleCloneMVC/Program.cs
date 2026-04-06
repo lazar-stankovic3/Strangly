@@ -190,8 +190,12 @@ else
     app.UseHsts();
 }
 
-// ✅ preporučeno: HTTPS redirection (na produkciji obavezno)
-app.UseHttpsRedirection();
+// HTTPS redirection samo lokalno – Render terminira TLS na load balanceru,
+// pa app prima plain HTTP. UseHttpsRedirection ovdje bi izazvao redirect petlju.
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseStaticFiles();
 app.UseRouting();
