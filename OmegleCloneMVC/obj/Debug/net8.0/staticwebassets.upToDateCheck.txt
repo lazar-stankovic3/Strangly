@@ -2,6 +2,7 @@ wwwroot\css\about.css
 wwwroot\css\admin.css
 wwwroot\css\chat.css
 wwwroot\css\login.css
+wwwroot\css\site.css
 wwwroot\css\textchat.css
 wwwroot\favicon.ico
 wwwroot\images\logo-strangly.png
@@ -260,4 +261,3 @@ wwwroot\lib\microsoft\signalr\src\third-party-notices.txt
 wwwroot\lib\microsoft\signalr\src\Utils.ts
 wwwroot\lib\microsoft\signalr\src\WebSocketTransport.ts
 wwwroot\lib\microsoft\signalr\src\XhrHttpClient.ts
-wwwroot\css\site.css

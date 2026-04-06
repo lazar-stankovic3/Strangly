@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "iisSettings": {
     "windowsAuthentication": false,
@@ -25,16 +25,16 @@
       "applicationUrl": "https://localhost:7219;http://localhost:5019",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "Authentication__Google__ClientId": "983072545097-p1n5n80ua344hjcb6rvlp4b8hehg6d9u.apps.googleusercontent.com",
-        "Authentication__Google__ClientSecret": "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",
-        "Authentication__Facebook__AppId": "YOUR_FACEBOOK_APP_ID",
-        "Authentication__Facebook__AppSecret": "YOUR_FACEBOOK_APP_SECRET",
+        "Authentication__Google__ClientId": "",
+        "Authentication__Google__ClientSecret": "",
+        "Authentication__Facebook__AppId": "",
+        "Authentication__Facebook__AppSecret": "",
         "ConnectionStrings__OmegleCloneMVCContext": "Server=(localdb)\\mssqllocaldb;Database=OmegleCloneDb;Trusted_Connection=True;MultipleActiveResultSets=true",
-        "Stripe__SecretKey": "sk_test_51RltYN0613z4vGXYZ90DzwOUrQQcmIonByRYZe8fUATApzfVpU82U6ng7Y9Q3pgC41chrBqin8a3NE977p2gMExM00uySDKPfX",
-        "Stripe__PublishableKey": "pk_test_51RltYN0613z4vGXYiJI372BgeaAzRQj88xB9FRtAZjIoMQnvD4N8391F6eMMJDj0JDtrqYeUXTAUgiI3Ob8ZnF7U00ixC6lEL9",
-        "Stripe__PriceId": "price_1Rltag0613z4vGXYgm6QFoLm",
-        "Stripe__WebhookSecret": "whsec_c42b92f5615d583e96c1f470934d2d31162cc441eb9086e7480eb8cb998f91a7",
-        "Jwt__Key": "Yaghasgafssew514124egdgfgssgastw"
+        "Stripe__SecretKey": "",
+        "Stripe__PublishableKey": "",
+        "Stripe__PriceId": "",
+        "Stripe__WebhookSecret": "",
+        "Jwt__Key": ""
       }
     },
     "IIS Express": {
