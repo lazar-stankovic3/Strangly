@@ -1,11 +1,7 @@
-wwwroot\css\about.css
-wwwroot\css\admin.css
-wwwroot\css\chat.css
-wwwroot\css\login.css
 wwwroot\css\site.css
-wwwroot\css\textchat.css
+wwwroot\css\login.css
+wwwroot\css\chat.css
 wwwroot\favicon.ico
-wwwroot\images\logo-strangly.png
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map
@@ -64,6 +60,10 @@ wwwroot\lib\jquery\dist\jquery.js
 wwwroot\lib\jquery\dist\jquery.min.js
 wwwroot\lib\jquery\dist\jquery.min.map
 wwwroot\lib\jquery\LICENSE.txt
+wwwroot\css\textchat.css
+wwwroot\css\about.css
+wwwroot\images\logo-strangly.png
+wwwroot\css\admin.css
 wwwroot\lib\microsoft\signalr\dist\browser\signalr.js
 wwwroot\lib\microsoft\signalr\dist\browser\signalr.js.map
 wwwroot\lib\microsoft\signalr\dist\browser\signalr.min.js

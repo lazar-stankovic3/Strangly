@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using OmegleCloneMVC.Data;
 using OmegleCloneMVC.Hubs;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,6 +59,15 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
+    // Fall back to a random key when Jwt:Key isn't configured, so constructing the
+    // SymmetricSecurityKey never throws (key length 0). No tokens are ever issued with
+    // this fallback (GenerateJwt requires a configured key), so any Bearer token presented
+    // simply fails validation (401) instead of crashing every request with a 500.
+    var configuredKey = builder.Configuration["Jwt:Key"];
+    var keyBytes = string.IsNullOrWhiteSpace(configuredKey)
+        ? RandomNumberGenerator.GetBytes(32)
+        : Encoding.UTF8.GetBytes(configuredKey);
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -66,23 +76,37 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "")),
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
         RoleClaimType = ClaimTypes.Role
     };
 })
-.AddGoogle(options =>
+;
+
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
 {
-    options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
-    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
-    options.SignInScheme = "External";
-})
-.AddFacebook(options =>
+    builder.Services.AddAuthentication()
+        .AddGoogle(options =>
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+            options.SignInScheme = "External";
+        });
+}
+
+var facebookAppId = builder.Configuration["Authentication:Facebook:AppId"];
+var facebookAppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
+if (!string.IsNullOrWhiteSpace(facebookAppId) && !string.IsNullOrWhiteSpace(facebookAppSecret))
 {
-    options.AppId = builder.Configuration["Authentication:Facebook:AppId"] ?? "";
-    options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"] ?? "";
-    options.SignInScheme = "External";
-});
+    builder.Services.AddAuthentication()
+        .AddFacebook(options =>
+        {
+            options.AppId = facebookAppId;
+            options.AppSecret = facebookAppSecret;
+            options.SignInScheme = "External";
+        });
+}
 
 builder.Services.AddAuthorization();
 

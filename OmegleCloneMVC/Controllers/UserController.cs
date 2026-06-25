@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OmegleCloneMVC.Data;
@@ -27,6 +28,7 @@ namespace OmegleCloneMVC.Controllers
             _configuration = configuration;
         }
 
+        [EnableRateLimiting("auth")]
         [HttpPost("Registration")]
         public async Task<IActionResult> Registration([FromBody] UserDto userDTO)
         {
@@ -56,6 +58,7 @@ namespace OmegleCloneMVC.Controllers
             return Ok("Uspešna registracija");
         }
 
+        [EnableRateLimiting("auth")]
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
@@ -80,7 +83,7 @@ namespace OmegleCloneMVC.Controllers
             user.IsActive = 1;
             await _context.SaveChangesAsync();
 
-            // COOKIE AUTH (glavno za MVC)
+            // COOKIE AUTH (glavno za MVC)e
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),

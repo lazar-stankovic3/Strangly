@@ -2,11 +2,21 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using OmegleCloneMVC.Data;
+using OmegleCloneMVC.Models;
 
 namespace OmegleCloneMVC.Hubs
 {
     public class ChatHub : Hub
     {
+        private readonly OmegleCloneMVCContext _db;
+
+        public ChatHub(OmegleCloneMVCContext db)
+        {
+            _db = db;
+        }
+
         // ── Limits & rate-limit windows ────────────────────────────
         private const int  MaxMessageLength   = 500;
         private const int  MaxInterestLength  = 32;
@@ -15,6 +25,12 @@ namespace OmegleCloneMVC.Hubs
         private const long TypingRateLimitMs  = 400;  // ~2-3 typing/sec
         private const long NextRateLimitMs    = 1500; // min 1.5 s between Next()
         private const long OnlineBroadcastMs  = 3000; // broadcast online count at most every 3 s
+
+        // ── Reporting / abuse ───────────────────────────────────────
+        private const int ReportBanThreshold = 5;                       // reports against an IP...
+        private static readonly TimeSpan ReportWindow = TimeSpan.FromHours(1);  // ...within this window...
+        private static readonly TimeSpan BanDuration   = TimeSpan.FromHours(2); // ...triggers this ban length
+        private static readonly ConcurrentDictionary<string, string> ConnectionIps = new();
 
         // ── Online counter ─────────────────────────────────────────
         private static int  _onlineCount;
@@ -53,6 +69,17 @@ namespace OmegleCloneMVC.Hubs
         public override async Task OnConnectedAsync()
         {
             var http = Context.GetHttpContext();
+            var ip = http?.Connection.RemoteIpAddress?.ToString();
+
+            if (ChatAbuseGuard.IsBanned(ip))
+            {
+                await Clients.Caller.SendAsync("Banned");
+                Context.Abort();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(ip))
+                ConnectionIps[Context.ConnectionId] = ip;
 
             var gender   = Sanitize(http?.Request.Query["gender"],       "male", "female") ?? "";
             var filter   = Sanitize(http?.Request.Query["genderFilter"], "male", "female", "any") ?? "any";
@@ -402,6 +429,49 @@ namespace OmegleCloneMVC.Hubs
             LastIce.TryRemove(id, out _);
             LastTyping.TryRemove(id, out _);
             LastNext.TryRemove(id, out _);
+            ConnectionIps.TryRemove(id, out _);
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // Report
+        // ══════════════════════════════════════════════════════════
+        public async Task ReportPartner(string? reason)
+        {
+            if (!Pairs.TryGetValue(Context.ConnectionId, out var partner)) return;
+
+            reason = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
+            if (reason.Length > 64) reason = reason[..64];
+
+            ConnectionIps.TryGetValue(Context.ConnectionId, out var reporterIp);
+            ConnectionIps.TryGetValue(partner, out var reportedIp);
+
+            try
+            {
+                _db.Reports.Add(new Report
+                {
+                    ReporterIp = reporterIp ?? "unknown",
+                    ReportedIp = reportedIp ?? "unknown",
+                    Reason     = reason,
+                    ChatType   = "video",
+                    CreatedUtc = DateTime.UtcNow
+                });
+                await _db.SaveChangesAsync();
+
+                if (!string.IsNullOrWhiteSpace(reportedIp))
+                {
+                    var since = DateTime.UtcNow - ReportWindow;
+                    var recentCount = await _db.Reports.CountAsync(r => r.ReportedIp == reportedIp && r.CreatedUtc >= since);
+                    if (recentCount >= ReportBanThreshold)
+                        ChatAbuseGuard.Ban(reportedIp, BanDuration);
+                }
+            }
+            catch
+            {
+                // Reporting is best-effort; never break the chat flow over a logging failure.
+            }
+
+            // Move the reporter on to a new partner, same as a manual Next().
+            await Next();
         }
 
         // ── Input sanitization ─────────────────────────────────────

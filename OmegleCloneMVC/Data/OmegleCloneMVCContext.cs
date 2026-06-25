@@ -13,6 +13,7 @@ namespace OmegleCloneMVC.Data
         public DbSet<User> User { get; set; } = default!;
         public DbSet<Role> Role { get; set; } = default!;
         public DbSet<AdminActionLog> AdminActionLogs { get; set; } = default!; // <-- DODAJ
+        public DbSet<Report> Reports { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -39,6 +40,12 @@ namespace OmegleCloneMVC.Data
 
             modelBuilder.Entity<AdminActionLog>()
                 .HasIndex(x => x.CreatedUtc);
+
+            modelBuilder.Entity<Report>()
+                .HasIndex(x => x.CreatedUtc);
+
+            modelBuilder.Entity<Report>()
+                .HasIndex(x => x.ReportedIp);
         }
     }
 }

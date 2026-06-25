@@ -3,16 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|c:\\users\\lazar\\source\\repos\\omegleclonemvc\\omegleclonemvc\\.env||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|solutionrelative:omegleclonemvc\\.env||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|c:\\users\\lazar\\source\\repos\\omegleclonemvc\\omegleclonemvc\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|solutionrelative:omegleclonemvc\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|c:\\users\\lazar\\source\\repos\\omegleclonemvc\\omegleclonemvc\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|solutionrelative:omegleclonemvc\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|c:\\users\\lazar\\source\\repos\\omegleclonemvc\\omegleclonemvc\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|solutionrelative:omegleclonemvc\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|c:\\users\\lazar\\source\\repos\\omegleclonemvc\\omegleclonemvc\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|solutionrelative:omegleclonemvc\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{D3EEE7AD-3570-453C-9074-76CD9CD21F51}|OmegleCloneMVC\\OmegleCloneMVC.csproj|c:\\users\\lazar\\source\\repos\\omegleclonemvc\\omegleclonemvc\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -35,37 +35,37 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": ".env",
-              "DocumentMoniker": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\.env",
-              "RelativeDocumentMoniker": "OmegleCloneMVC\\.env",
-              "ToolTip": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\.env",
-              "RelativeToolTip": "OmegleCloneMVC\\.env",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-04-06T14:31:52.228Z",
+              "Title": "UserController.cs",
+              "DocumentMoniker": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\Controllers\\UserController.cs",
+              "RelativeDocumentMoniker": "OmegleCloneMVC\\Controllers\\UserController.cs",
+              "ToolTip": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\Controllers\\UserController.cs",
+              "RelativeToolTip": "OmegleCloneMVC\\Controllers\\UserController.cs",
+              "ViewState": "AgIAAD4AAAAAAAAAAAAxwEcAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-06T19:11:36.943Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\Program.cs",
               "RelativeDocumentMoniker": "OmegleCloneMVC\\Program.cs",
               "ToolTip": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\Program.cs",
               "RelativeToolTip": "OmegleCloneMVC\\Program.cs",
-              "ViewState": "AgIAAC4AAAAAAAAAAAAwwDMAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAABwAAAAAAAAAAAAwwDMAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-16T17:27:18.114Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "OmegleCloneMVC\\Controllers\\AuthController.cs",
               "ToolTip": "C:\\Users\\lazar\\source\\repos\\OmegleCloneMVC\\OmegleCloneMVC\\Controllers\\AuthController.cs",
               "RelativeToolTip": "OmegleCloneMVC\\Controllers\\AuthController.cs",
-              "ViewState": "AgIAAFsAAAAAAAAAAAAcwGcAAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAHAAAAAAAAAAAAAcwGcAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-16T17:11:06.558Z"
             },

@@ -2,16 +2,32 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using OmegleCloneMVC.Data;
+using OmegleCloneMVC.Models;
 
 namespace OmegleCloneMVC.Hubs
 {
     public class TextChatHub : Hub
     {
+        private readonly OmegleCloneMVCContext _db;
+
+        public TextChatHub(OmegleCloneMVCContext db)
+        {
+            _db = db;
+        }
+
         private const int  MaxMessageLength  = 500;
         private const int  MaxInterestLength = 32;
         private const long MsgRateLimitMs    = 80;   // ~12 msg/sec
         private const long TypingRateLimitMs = 400;  // ~2-3/sec
         private const long NextRateLimitMs   = 1500; // min 1.5 s between Next()
+
+        // ── Reporting / abuse ───────────────────────────────────────
+        private const int ReportBanThreshold = 5;
+        private static readonly TimeSpan ReportWindow = TimeSpan.FromHours(1);
+        private static readonly TimeSpan BanDuration   = TimeSpan.FromHours(2);
+        private static readonly ConcurrentDictionary<string, string> ConnectionIps = new();
 
         private static readonly object Sync = new();
 
@@ -32,8 +48,20 @@ namespace OmegleCloneMVC.Hubs
         // ══════════════════════════════════════════════════════════
         public override async Task OnConnectedAsync()
         {
-            var interest = SanitizeInterest(
-                Context.GetHttpContext()?.Request.Query["interest"].ToString());
+            var http = Context.GetHttpContext();
+            var ip = http?.Connection.RemoteIpAddress?.ToString();
+
+            if (ChatAbuseGuard.IsBanned(ip))
+            {
+                await Clients.Caller.SendAsync("Banned");
+                Context.Abort();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(ip))
+                ConnectionIps[Context.ConnectionId] = ip;
+
+            var interest = SanitizeInterest(http?.Request.Query["interest"].ToString());
 
             UserInterests[Context.ConnectionId] = interest;
 
@@ -69,19 +97,43 @@ namespace OmegleCloneMVC.Hubs
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             string? partner = null;
+            string? partnerNewMatch = null;
 
             lock (Sync)
             {
+                Waiting.Remove(Context.ConnectionId);
+
                 if (Pairs.TryRemove(Context.ConnectionId, out partner) && partner is not null)
+                {
                     Pairs.TryRemove(partner, out _);
-                else
-                    Waiting.Remove(Context.ConnectionId);
+
+                    if (UserInterests.ContainsKey(partner))
+                    {
+                        Waiting.Add(partner);
+
+                        UserInterests.TryGetValue(partner, out var partnerInterest);
+                        partnerNewMatch = FindPartner(partner, partnerInterest ?? "");
+                        if (partnerNewMatch is not null)
+                        {
+                            Waiting.Remove(partner);
+                            Waiting.Remove(partnerNewMatch);
+                            Pairs[partner]            = partnerNewMatch;
+                            Pairs[partnerNewMatch]     = partner;
+                        }
+                    }
+                }
             }
 
             PurgeConnectionState(Context.ConnectionId);
 
             if (partner is not null)
                 await Clients.Client(partner).SendAsync("PartnerDisconnected");
+
+            if (partnerNewMatch is not null)
+            {
+                await Clients.Client(partner!).SendAsync("ReceiveMessage", "✅ Partner connected.");
+                await Clients.Client(partnerNewMatch).SendAsync("ReceiveMessage", "✅ Partner connected.");
+            }
 
             await base.OnDisconnectedAsync(exception);
         }
@@ -203,6 +255,49 @@ namespace OmegleCloneMVC.Hubs
             LastMsg.TryRemove(id, out _);
             LastTyping.TryRemove(id, out _);
             LastNext.TryRemove(id, out _);
+            ConnectionIps.TryRemove(id, out _);
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // Report
+        // ══════════════════════════════════════════════════════════
+        public async Task ReportPartner(string? reason)
+        {
+            if (!Pairs.TryGetValue(Context.ConnectionId, out var partner)) return;
+
+            reason = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
+            if (reason.Length > 64) reason = reason[..64];
+
+            ConnectionIps.TryGetValue(Context.ConnectionId, out var reporterIp);
+            ConnectionIps.TryGetValue(partner, out var reportedIp);
+
+            try
+            {
+                _db.Reports.Add(new Report
+                {
+                    ReporterIp = reporterIp ?? "unknown",
+                    ReportedIp = reportedIp ?? "unknown",
+                    Reason     = reason,
+                    ChatType   = "text",
+                    CreatedUtc = DateTime.UtcNow
+                });
+                await _db.SaveChangesAsync();
+
+                if (!string.IsNullOrWhiteSpace(reportedIp))
+                {
+                    var since = DateTime.UtcNow - ReportWindow;
+                    var recentCount = await _db.Reports.CountAsync(r => r.ReportedIp == reportedIp && r.CreatedUtc >= since);
+                    if (recentCount >= ReportBanThreshold)
+                        ChatAbuseGuard.Ban(reportedIp, BanDuration);
+                }
+            }
+            catch
+            {
+                // Reporting is best-effort; never break the chat flow over a logging failure.
+            }
+
+            // Move the reporter on to a new partner, same as a manual Next().
+            await Next();
         }
 
         private static string SanitizeInterest(string? raw)

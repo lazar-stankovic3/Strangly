@@ -29,7 +29,6 @@ C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\obj\Debug\net8.0\scope
 C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\obj\Debug\net8.0\OmegleCl.1A62539D.Up2Date
 C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\obj\Debug\net8.0\OmegleCloneMVC.dll
 C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\obj\Debug\net8.0\refint\OmegleCloneMVC.dll
@@ -332,3 +331,4 @@ C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\bin\Debug\net8.0\Micro
 C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\bin\Debug\net8.0\Microsoft.Extensions.Features.dll
 C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\bin\Debug\net8.0\System.Net.ServerSentEvents.dll
 C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\bin\Debug\net8.0\System.Threading.Channels.dll
+C:\Users\lazar\source\repos\OmegleCloneMVC\OmegleCloneMVC\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

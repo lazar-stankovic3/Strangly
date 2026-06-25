@@ -11,12 +11,14 @@ namespace OmegleCloneMVC.Controllers
         private static readonly object _sync = new();
         private static List<HubConnection> _hubs = new();
 
-        private static bool IsDevelopment()
+        private readonly IWebHostEnvironment _env;
+
+        public LoadTestController(IWebHostEnvironment env)
         {
-            // radi i bez DI
-            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-            return env.Equals("Development", StringComparison.OrdinalIgnoreCase);
+            _env = env;
         }
+
+        private bool IsDevelopment() => _env.IsDevelopment();
 
         // GET /loadtest/start/600
         [HttpGet("start/{count}")]

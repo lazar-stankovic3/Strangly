@@ -248,6 +248,33 @@ namespace OmegleCloneMVC.Controllers
             return View(vm);
         }
 
+        // ===== REPORTS =====
+        [HttpGet("Reports")]
+        public async Task<IActionResult> Reports(int page = 1, int pageSize = 30)
+        {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 10, 100);
+
+            var query = _context.Reports.AsNoTracking().OrderByDescending(x => x.CreatedUtc);
+
+            var total = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
+            if (totalPages > 0) page = Math.Min(page, totalPages);
+
+            var reports = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var vm = new AdminReportsVm
+            {
+                Page = page,
+                PageSize = pageSize,
+                Total = total,
+                TotalPages = totalPages,
+                Reports = reports
+            };
+
+            return View(vm);
+        }
+
         // ===== HELPERS =====
         private async Task<AdminStatsVm> GetStatsAsync()
         {
@@ -359,5 +386,14 @@ namespace OmegleCloneMVC.Controllers
         public int Total { get; set; }
         public int TotalPages { get; set; }
         public List<AdminActionLog> Logs { get; set; } = new();
+    }
+
+    public class AdminReportsVm
+    {
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int Total { get; set; }
+        public int TotalPages { get; set; }
+        public List<Report> Reports { get; set; } = new();
     }
 }

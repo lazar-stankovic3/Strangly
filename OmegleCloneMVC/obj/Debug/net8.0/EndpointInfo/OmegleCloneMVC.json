@@ -276,6 +276,38 @@
         }
       }
     },
+    "/AdminPanel/Reports": {
+      "get": {
+        "tags": [
+          "AdminPanel"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/auth/logout": {
       "get": {
         "tags": [
@@ -346,6 +378,18 @@
               "default": "/"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ice-config": {
+      "get": {
+        "tags": [
+          "Chat"
         ],
         "responses": {
           "200": {
